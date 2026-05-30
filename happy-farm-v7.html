@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🌾 開心農場 v6.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--g1:#1b5e20;--g2:#2e7d32;--g3:#43a047;--g4:#66bb6a;--b2:#283593;--b3:#3949ab;--gold:#f9a825;--gold2:#ffd54f;--red2:#ef5350;--brown:#5d4037;--panel:#f1f8e9;--border:#a5d6a7;--shadow:0 4px 20px rgba(0,0,0,.15);--font:'Noto Sans TC',sans-serif}
+body{font-family:var(--font);background:linear-gradient(160deg,#e8f5e9,#c8e6c9);min-height:100vh}
+#toasts{position:fixed;top:12px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:270px}
+.toast{background:#fff;border-left:4px solid var(--g3);border-radius:10px;padding:8px 12px;font-size:.76rem;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.18);animation:tin .3s ease;word-break:break-word}
+.toast.warn{border-left-color:var(--gold)}.toast.err{border-left-color:var(--red2)}
+@keyframes tin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+#auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1b5e20,#2e7d32,#1a237e);display:flex;align-items:center;justify-content:center;z-index:8000}
+.auth-box{background:#fff;border-radius:20px;padding:28px 24px;width:330px;max-width:96vw;box-shadow:0 16px 48px rgba(0,0,0,.35);text-align:center}
+.auth-logo{font-size:3rem;margin-bottom:4px}.auth-title{font-size:1.2rem;font-weight:900;color:var(--g1);margin-bottom:3px}
+.auth-sub{font-size:.72rem;color:#999;margin-bottom:16px}
+.auth-tabs{display:flex;border-radius:9px;overflow:hidden;border:2px solid var(--g4);margin-bottom:15px}
+.auth-tab{flex:1;padding:7px;cursor:pointer;font-weight:700;font-size:.78rem;background:#fff;color:var(--g2);transition:.2s}
+.auth-tab.active{background:var(--g2);color:#fff}
+.auth-field{width:100%;border:2px solid #ddd;border-radius:9px;padding:9px 12px;font-size:.83rem;font-family:var(--font);margin-bottom:9px;outline:none;transition:.2s}
+.auth-field:focus{border-color:var(--g3)}
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--g2),var(--g3));color:#fff;border:none;border-radius:9px;padding:11px;font-size:.88rem;font-weight:900;font-family:var(--font);cursor:pointer;margin-top:3px}
+.auth-btn:hover{opacity:.9}
+.auth-msg{font-size:.72rem;min-height:16px;margin-top:5px}
+#app{display:none}
+#hdr{background:linear-gradient(90deg,var(--g1),var(--g2),var(--b2));color:#fff;padding:7px 13px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+#hdr h1{font-size:.95rem;font-weight:900;flex-shrink:0}
+.hstat{background:rgba(255,255,255,.15);border-radius:7px;padding:3px 8px;font-size:.72rem;font-weight:700;white-space:nowrap}
+#hdr-right{margin-left:auto;display:flex;gap:5px;align-items:center}
+.hbtn{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:7px;padding:4px 9px;font-size:.7rem;cursor:pointer;font-family:var(--font);font-weight:700}
+#wtab{display:flex;background:var(--g1);overflow-x:auto;scrollbar-width:none}
+#wtab::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:8px 13px;cursor:pointer;color:rgba(255,255,255,.6);font-size:.7rem;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap;transition:.2s}
+.tab.active{color:#fff;border-bottom-color:var(--gold2)}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.panel{display:none;padding:11px;max-width:960px;margin:0 auto}
+.panel.active{display:block}
+.card{background:var(--panel);border:2px solid var(--border);border-radius:13px;padding:12px;margin-bottom:11px;box-shadow:var(--shadow)}
+.card h3{font-size:.86rem;font-weight:900;color:var(--g1);margin-bottom:8px;padding-bottom:6px;border-bottom:1px dashed var(--border)}
+.btn{border:none;border-radius:8px;padding:6px 13px;cursor:pointer;font-weight:700;font-size:.75rem;font-family:var(--font);transition:.18s;display:inline-flex;align-items:center;gap:4px;line-height:1.2}
+.btn:hover{transform:translateY(-2px);box-shadow:0 3px 8px rgba(0,0,0,.18)}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-g{background:var(--g2);color:#fff}.btn-b{background:var(--b3);color:#fff}.btn-r{background:var(--red2);color:#fff}
+.btn-gold{background:var(--gold);color:#000}.btn-br{background:var(--brown);color:#fff}.btn-pu{background:#7b1fa2;color:#fff}
+.btn-or{background:#e65100;color:#fff}.btn-sm{padding:4px 8px;font-size:.67rem}
+.btn-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.cd-txt{font-size:.63rem;color:var(--red2);font-weight:700}
+#farm-grid{display:grid;gap:4px;margin-bottom:7px}
+.cell{background:linear-gradient(135deg,#795548,#8d6e63);border:2px solid #5d4037;border-radius:8px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.2s;position:relative;overflow:hidden;user-select:none}
+.cell:hover{transform:scale(1.07);border-color:var(--gold);z-index:2}
+.cell.empty{background:linear-gradient(135deg,#6d4c41,#795548)}
+.cell-icon{font-size:1.4rem;line-height:1}.cell-name{font-size:.42rem;color:#fff;font-weight:700;text-shadow:0 1px 2px #000;margin-top:1px;text-align:center}
+.cell-timer{font-size:.38rem;background:rgba(0,0,0,.55);color:#ffe;border-radius:3px;padding:1px 3px;margin-top:1px}
+.cell-badge{position:absolute;top:2px;right:2px;font-size:.62rem}
+.cell.ready{border-color:var(--g4);animation:pglow 1.2s infinite}
+@keyframes pglow{0%,100%{box-shadow:0 0 0 0 rgba(102,187,106,.5)}60%{box-shadow:0 0 0 5px rgba(102,187,106,0)}}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px}
+.si{background:#fff;border:2px solid var(--border);border-radius:10px;padding:9px 7px;text-align:center;cursor:pointer;transition:.2s}
+.si:hover{border-color:var(--g3);transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.si-ic{font-size:1.9rem;display:block;margin-bottom:3px}
+.si-n{font-size:.7rem;font-weight:700;color:#333;margin-bottom:2px}.si-p{font-size:.66rem;color:var(--g1);font-weight:900}
+.si-note{font-size:.57rem;color:#777;margin-top:2px;line-height:1.3}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:11px}
+.mo.open{display:flex}
+.mb{background:#fff;border:3px solid var(--border);border-radius:16px;padding:18px;max-width:390px;width:100%;max-height:87vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.32)}
+.mb h2{font-size:.96rem;font-weight:900;color:var(--g1);margin-bottom:11px;text-align:center}
+.mc{float:right;background:var(--red2);color:#fff;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:.78rem;font-family:var(--font);margin-top:-3px}
+.pbar{background:#e0e0e0;border-radius:99px;height:8px;overflow:hidden;margin-top:3px}
+.pfill{height:100%;border-radius:99px;transition:width .5s}
+.pf-g{background:linear-gradient(90deg,var(--g3),var(--g4))}.pf-go{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.lb-row{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:8px;margin-bottom:4px;background:#fff;border:1px solid var(--border)}
+.lb-row.me{background:#e8f5e9;border-color:var(--g3);font-weight:900}
+.lb-rk{font-size:.95rem;font-weight:900;min-width:24px;text-align:center}.lb-av{font-size:1.2rem}
+.lb-nm{flex:1;font-size:.76rem;font-weight:700}.lb-vl{font-size:.7rem;font-weight:900;color:var(--g1)}
+#chatbox{height:180px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;padding:7px;background:#fafafa;display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.cm{padding:4px 8px;border-radius:8px;font-size:.71rem;max-width:88%}
+.cm.mine{background:#c8e6c9;align-self:flex-end}.cm.theirs{background:#eee;align-self:flex-start}
+.cm-who{font-weight:900;font-size:.6rem;margin-bottom:1px;color:#555}
+#chat-row{display:flex;gap:5px}
+#chat-row input{flex:1;border:1.5px solid #ddd;border-radius:8px;padding:6px 9px;font-size:.76rem;font-family:var(--font);outline:none}
+#chat-row input:focus{border-color:var(--g3)}
+.frow{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:8px;background:#fff;border:1px solid var(--border);margin-bottom:4px}
+.fdot{width:8px;height:8px;border-radius:50%;margin-left:auto}.fdot.on{background:#4caf50}.fdot.off{background:#bbb}
+.av-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;max-height:195px;overflow-y:auto}
+.av-opt{font-size:1.45rem;text-align:center;padding:3px;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:.15s}
+.av-opt:hover,.av-opt.sel{background:#e8f5e9;border-color:var(--g3);transform:scale(1.12)}
+.badge{display:inline-block;background:var(--gold);color:#000;border-radius:7px;padding:2px 7px;font-size:.6rem;font-weight:900;margin:2px}
+.badge.lk{background:#ddd;color:#999}
+.eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:4px}
+.ei{background:#fff;border:2px solid #ddd;border-radius:8px;padding:6px 3px;text-align:center;font-size:.58rem}
+.ei.got{border-color:var(--g3);background:#e8f5e9}.ei-ic{font-size:1.65rem;display:block}
+.ei.lk .ei-ic{opacity:.22}
+.deco-stage{display:flex;flex-wrap:wrap;gap:5px;min-height:50px;padding:7px;border:2px dashed #b0bec5;border-radius:9px;background:#f0f4c3}
+.dp{font-size:1.9rem;cursor:pointer;padding:4px;background:#fff;border-radius:7px;border:2px solid var(--border);transition:.15s}
+.dp:hover{border-color:var(--red2);transform:scale(1.1)}
+.chrow{background:#fff;border:2px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:7px}
+.chrow.done{border-color:var(--g3);background:#e8f5e9}
+.arow{background:#fff;border:2px solid var(--border);border-radius:10px;padding:9px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:7px}
+.acard{background:#fff;border:2px solid var(--border);border-radius:11px;padding:9px 7px;text-align:center;transition:.2s;cursor:pointer}
+.acard:hover{border-color:var(--g3);transform:translateY(-2px)}
+.acard .ai{font-size:2.1rem;display:block}.acard .an{font-size:.7rem;font-weight:700;margin:3px 0}.acard .as{font-size:.6rem;color:#888}
+.acard.owned{border-color:var(--g3);background:#e8f5e9}.acard.rdy{border-color:var(--gold);background:#fff8e1;animation:pglow 1s infinite}
+.fc{border-radius:15px;padding:14px;margin-bottom:11px;color:#fff;position:relative;overflow:hidden}
+.fc h3{font-size:.95rem;font-weight:900;margin-bottom:5px;color:#fff}.fc p{font-size:.76rem;opacity:.92;margin-bottom:9px}
+.fc-active{border:3px solid var(--gold2)}.fc-off{opacity:.6;filter:grayscale(.35)}
+.fc-ic{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:3.8rem;opacity:.25}
+.bg-spring{background:linear-gradient(135deg,#e91e63,#f06292)}
+.bg-cny{background:linear-gradient(135deg,#c62828,#ff5722)}
+.bg-dragon{background:linear-gradient(135deg,#2e7d32,#66bb6a)}
+.bg-midautumn{background:linear-gradient(135deg,#f57f17,#ffb300)}
+.bg-summer{background:linear-gradient(135deg,#0277bd,#29b6f6)}
+.bg-xmas{background:linear-gradient(135deg,#1b5e20,#c62828)}
+#fish-scene{background:linear-gradient(180deg,#b3e5fc 0%,#0277bd 45%,#01579b 100%);border-radius:14px;height:185px;position:relative;overflow:hidden;margin-bottom:11px}
+.wl{position:absolute;top:42%;left:0;right:0;height:3px;background:rgba(255,255,255,.35)}
+#bobber{position:absolute;font-size:1.4rem;top:44%;left:50%;transform:translateX(-50%);transition:top .3s}
+.fish-rod{position:absolute;top:4%;right:13%;font-size:2.3rem;transform:rotate(28deg)}
+#ftbar{position:absolute;bottom:7px;left:8%;right:8%;height:9px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden}
+#ftfill{height:100%;background:linear-gradient(90deg,#4caf50,#ffeb3b,#f44336);border-radius:99px;width:100%;transition:width .1s linear}
+#fish-swim{position:absolute;font-size:1.7rem;transition:left 4s linear,top 1s}
+.rb{display:inline-block;padding:3px 9px;border-radius:99px;font-size:.7rem;font-weight:900;margin-bottom:5px}
+.rc{background:#9e9e9e;color:#fff}.ru{background:#4caf50;color:#fff}.ro{background:#2196f3;color:#fff}
+.rg{background:#9c27b0;color:#fff}.rf{background:#ff9800;color:#fff}.rm{background:#f44336;color:#fff}
+.rp{background:#e91e63;color:#fff}.re{background:linear-gradient(90deg,#ff6f00,#f50057);color:#fff}
+.rse{background:linear-gradient(90deg,#aa00ff,#d500f9);color:#fff}
+.rr{background:linear-gradient(90deg,#ff6d00,#ffab40);color:#fff;animation:rsh 1s infinite}
+.rsr{background:linear-gradient(90deg,#d50000,#ff1744);color:#fff;animation:rsh .8s infinite}
+.rur{background:linear-gradient(135deg,#6200ea,#d500f9,#6200ea);color:#fff;animation:rsh .5s infinite;background-size:200%}
+@keyframes rsh{0%,100%{opacity:1}50%{opacity:.7}}
+.rcard{background:#fff;border:2px solid var(--border);border-radius:10px;padding:9px;margin-bottom:6px}
+.rcard.lk{background:#f5f5f5;border-color:#ddd}
+.ir{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.it{background:#e8f5e9;border:1px solid var(--border);border-radius:5px;padding:2px 5px;font-size:.6rem;font-weight:700}
+.it.ms{background:#ffebee;border-color:#ffcdd2;color:#c62828}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#a5d6a7;border-radius:99px}
+/* ══ DAILY CHECKIN ══ */
+.signin-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px}
+.day-box{background:#fff;border:2px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;transition:.2s;position:relative}
+.day-box.claimed{background:linear-gradient(135deg,var(--g3),var(--g4));border-color:var(--g2)}
+.day-box.claimed .day-ic{filter:none}.day-box.claimed .day-lbl{color:#fff}.day-box.claimed .day-rew{color:#fff0}
+.day-box.today{border-color:var(--gold);box-shadow:0 0 0 3px rgba(249,168,37,.3)}
+.day-box.today .day-lbl{color:var(--gold);font-weight:900}
+.day-box.missed{background:#f5f5f5;border-color:#ddd;opacity:.6}
+.day-ic{font-size:1.5rem;display:block;margin-bottom:2px}
+.day-lbl{font-size:.6rem;font-weight:700;color:#555;display:block;margin-bottom:1px}
+.day-rew{font-size:.55rem;color:var(--g2);font-weight:700;display:block}
+.streak-bar{background:linear-gradient(90deg,var(--g1),var(--g3));border-radius:10px;padding:10px 14px;color:#fff;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.streak-num{font-size:1.8rem;font-weight:900;line-height:1}
+.streak-label{font-size:.72rem;opacity:.85}
+.bonus-bar{background:linear-gradient(135deg,#f57f17,#ffb300);border-radius:10px;padding:9px 14px;color:#fff;margin-bottom:10px;font-size:.76rem;font-weight:700}
+
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">🌾</div>
+    <div class="auth-title">開心農場 v6.0</div>
+    <div class="auth-sub">帳號密碼存瀏覽器・不需伺服器・需要網路</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="at-li" onclick="swA('li')">登入</div>
+      <div class="auth-tab" id="at-rg" onclick="swA('rg')">註冊</div>
+    </div>
+    <div id="a-li">
+      <input class="auth-field" id="li-u" placeholder="帳號" maxlength="20" autocomplete="username">
+      <input class="auth-field" id="li-p" placeholder="密碼" type="password" maxlength="30" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLI()">
+      <button class="auth-btn" onclick="doLI()">🌱 登入農場</button>
+    </div>
+    <div id="a-rg" style="display:none">
+      <input class="auth-field" id="rg-u" placeholder="帳號(2-16字)" maxlength="16" autocomplete="username">
+      <input class="auth-field" id="rg-p" placeholder="密碼(4字以上)" type="password" maxlength="30" autocomplete="new-password">
+      <input class="auth-field" id="rg-p2" placeholder="確認密碼" type="password" maxlength="30" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRG()">
+      <button class="auth-btn" onclick="doRG()">🌻 建立帳號</button>
+    </div>
+    <div class="auth-msg" id="a-msg"></div>
+    <div style="font-size:.6rem;color:#ccc;margin-top:8px">資料存於此瀏覽器，清除快取則遺失</div>
+  </div>
+</div>
+<div id="app">
+<div id="hdr">
+  <h1>🌾 開心農場</h1>
+  <div class="hstat">💰<span id="hd-c">0</span></div>
+  <div class="hstat">⭐Lv.<span id="hd-l">1</span></div>
+  <div class="hstat">✨<span id="hd-x">0</span>XP</div>
+  <div id="hdr-right">
+    <div class="hstat" id="hd-av">👨‍🌾農夫</div>
+    <button class="hbtn" id="sfx-btn" onclick="togSFX()">🔊</button>
+    <button class="hbtn" onclick="doLO()">登出</button>
+  </div>
+</div>
+<div id="wx-strip" style="text-align:center;font-size:.76rem;font-weight:700;padding:4px 10px;background:rgba(255,255,255,.4);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,.4)">☀️ 晴天</div>
+<div id="wtab">
+  <div class="tab active" data-tab="farm">🌱農場</div>
+  <div class="tab" data-tab="fishing">🎣釣魚</div>
+  <div class="tab" data-tab="cooking">🍳料理</div>
+  <div class="tab" data-tab="animals">🐾動物</div>
+  <div class="tab" data-tab="shop">🏪商城</div>
+  <div class="tab" data-tab="social">👥社交</div>
+  <div class="tab" data-tab="festival">🎉節慶</div>
+  <div class="tab" data-tab="challenge">🎯挑戰</div>
+  <div class="tab" data-tab="rank">🏆排行</div>
+  <div class="tab" data-tab="enc">📖圖鑑</div>
+  <div class="tab" data-tab="deco">🎨裝飾</div>
+  <div class="tab" data-tab="profile">👤個人</div>
+  <div class="tab" data-tab="signin">📅簽到</div>
+</div>
+<div class="panel active" id="panel-farm">
+  <div class="card" id="wx-card" style="padding:8px 12px;margin-bottom:9px;font-weight:700;font-size:.81rem">☀️ 晴天 — 作物正常成長</div>
+  <div class="card">
+    <h3>🌾 我的農場</h3>
+    <div class="btn-row">
+      <button class="btn btn-b btn-sm" id="btn-wa">💧全部澆水</button>
+      <button class="btn btn-r btn-sm" id="btn-pa">🐛全部除蟲</button>
+      <button class="btn btn-g btn-sm" onclick="harvestAll()">🌾全部收成</button>
+    </div>
+    <div style="display:flex;gap:7px;margin-bottom:7px;flex-wrap:wrap">
+      <span id="cd-w" class="cd-txt"></span><span id="cd-p" class="cd-txt"></span>
+    </div>
+    <div id="farm-grid"></div>
+    <div style="margin-top:5px;font-size:.66rem;color:#888">點空地→種植 | 點作物→操作</div>
+  </div>
+  <div class="card"><h3>🐾 動物區（快速收集）</h3><div class="agrid" id="farm-anims"></div><button class="btn btn-g btn-sm" style="margin-top:7px" onclick="collectAll()">🐾 全部收集</button></div>
+</div>
+<div class="panel" id="panel-fishing">
+  <div class="card">
+    <h3>🎣 釣魚場（12種稀有度 / 80種魚）</h3>
+    <div id="fish-scene">
+      <div class="fish-rod">🎣</div><div class="wl"></div>
+      <div id="bobber">🪝</div><div id="fish-swim"></div>
+      <div id="ftbar"><div id="ftfill"></div></div>
+    </div>
+    <div style="text-align:center;margin-bottom:9px">
+      <div id="fish-st" style="font-size:.83rem;font-weight:700;color:var(--g1);margin-bottom:7px">花費10💰・15秒看看釣到什麼！</div>
+      <button class="btn btn-b" id="btn-fish" onclick="startFish()">🎣 開始釣魚（-10💰）</button>
+    </div>
+    <div id="fish-res" style="display:none;text-align:center;background:#e3f2fd;border-radius:11px;padding:11px;margin-top:7px">
+      <div id="fr-ic" style="font-size:2.8rem"></div>
+      <div id="fr-rb" class="rb rc" style="margin:5px auto;display:inline-block"></div>
+      <div id="fr-nm" style="font-weight:900;font-size:.96rem;margin-bottom:3px"></div>
+      <div id="fr-ds" style="font-size:.72rem;color:#555;margin-bottom:7px"></div>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn btn-g btn-sm" onclick="sellFish()">💰出售</button>
+        <button class="btn btn-or btn-sm" onclick="keepFish()">🐟放魚缸(可料理)</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🐟 我的魚缸 <span id="tank-ct" style="font-size:.7rem;color:var(--g3)"></span></h3>
+    <div id="fish-tank" style="display:flex;flex-wrap:wrap;gap:5px;min-height:38px;padding:5px;background:#e3f2fd;border-radius:9px"></div>
+  </div>
+  <div class="card"><h3>📊 釣魚圖鑑 <span id="fenc-ct" style="font-size:.7rem;color:var(--g3)"></span></h3><div class="eg" id="fish-enc"></div></div>
+</div>
+<div class="panel" id="panel-cooking">
+  <div class="card"><h3>🧺 食材庫</h3><div id="ingr-box" style="display:flex;flex-wrap:wrap;gap:4px;min-height:34px;padding:5px;background:#fff9c4;border-radius:9px;border:1px solid #ffe082"></div></div>
+  <div class="card">
+    <h3>📖 食譜 <span id="rec-ct" style="font-size:.7rem;color:var(--g3)"></span></h3>
+    <div class="btn-row">
+      <button class="btn btn-sm" id="rf-all" onclick="filterR('all')" style="background:var(--g2);color:#fff">全部</button>
+      <button class="btn btn-sm" id="rf-veg" onclick="filterR('veg')" style="background:#ddd;color:#333">🥕蔬菜</button>
+      <button class="btn btn-sm" id="rf-fish" onclick="filterR('fish')" style="background:#ddd;color:#333">🐟魚類</button>
+      <button class="btn btn-sm" id="rf-mixed" onclick="filterR('mixed')" style="background:#ddd;color:#333">🥘綜合</button>
+      <button class="btn btn-sm" id="rf-hidden" onclick="filterR('hidden')" style="background:#ddd;color:#333">✨隱藏</button>
+    </div>
+    <div id="rec-list"></div>
+  </div>
+</div>
+<div class="panel" id="panel-animals">
+  <div class="card"><h3>🐾 我的動物</h3><div class="agrid" id="my-anims"></div></div>
+  <div class="card"><h3>🛒 購買動物</h3><div class="agrid" id="buy-anims"></div></div>
+</div>
+<div class="panel" id="panel-shop">
+  <div class="card"><h3>🌱 種子商店</h3><div class="sg" id="seed-shop"></div></div>
+  <div class="card">
+    <h3>🧪 農場道具</h3><div class="sg" id="item-shop"></div>
+    <div style="margin-top:7px;font-size:.72rem;color:#555">庫存：<b id="inv-f">0</b>🌿 <b id="inv-p">0</b>🐞 <b id="inv-r">0</b>🌧️</div>
+  </div>
+  <div class="card">
+    <h3>📖 食譜書（解鎖全部隱藏食譜）</h3>
+    <button class="btn btn-pu" onclick="buyRB()">📖 購買食譜書 💰100,000</button>
+    <div id="rb-st" style="font-size:.74rem;color:var(--g2);margin-top:5px;font-weight:700"></div>
+  </div>
+  <div class="card">
+    <h3>🐕 看門狗（$10,000 / 3天保護）</h3>
+    <button class="btn btn-or" onclick="buyDog()">🐕 購買看門狗</button>
+    <div id="dog-st" style="font-size:.74rem;color:var(--g2);font-weight:700;margin-top:5px"></div>
+  </div>
+  <div class="card"><h3>🎰 扭蛋機（200💰）</h3><button class="btn btn-pu" onclick="doGacha()">🎰 抽！</button><div id="gacha-res" style="font-size:2.3rem;text-align:center;padding:10px;min-height:55px;display:flex;align-items:center;justify-content:center"></div></div>
+  <div class="card"><h3>🔥 限時特賣</h3><div class="sg" id="sale-shop"></div></div>
+  <div class="card"><h3>🏛️ 拍賣場</h3><div id="auc-list"></div><button class="btn btn-g btn-sm" style="margin-top:6px" onclick="listAuc()">📦 上架我的作物</button></div>
+  <div class="card"><h3>🏗️ 農場擴建</h3><div id="exp-shop"></div></div>
+</div>
+<div class="panel" id="panel-social">
+  <div class="card"><h3>👥 AI鄰居(300位)</h3><div id="nb-list" style="max-height:230px;overflow-y:auto"></div><button class="btn btn-g btn-sm" style="margin-top:6px" onclick="visitRnd()">🏃隨機拜訪</button></div>
+  <div class="card"><h3>🤝 好友(上限50)</h3><div id="fr-list" style="max-height:190px;overflow-y:auto"></div><button class="btn btn-b btn-sm" style="margin-top:6px" onclick="addFr()">➕加好友</button></div>
+  <div class="card"><h3>🎁 送禮</h3><p style="font-size:.74rem;color:#555;margin-bottom:7px">送禮花50💰，好友回贈種子</p><button class="btn btn-gold btn-sm" onclick="giftAll()">🎁送禮給所有好友</button></div>
+  <div class="card"><h3>💬 聊天室</h3><div id="chatbox"></div><div id="chat-row"><input id="chat-in" placeholder="說點什麼…" maxlength="60" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn btn-g btn-sm" onclick="sendChat()">送出</button></div></div>
+  <div class="card"><h3>⭐ 農場評分</h3><div id="rating-box" style="font-size:.78rem;color:#555;margin-bottom:7px">尚未評分</div><button class="btn btn-pu btn-sm" onclick="rateFarm()">讓AI幫我評分</button></div>
+</div>
+<div class="panel" id="panel-festival"><div style="font-size:.75rem;color:#666;margin-bottom:9px;padding:0 2px">🎉 節慶自動根據當月啟用，完成任務領獎勵！</div><div id="fest-list"></div></div>
+<div class="panel" id="panel-challenge">
+  <div class="card"><h3>🎯 每週大挑戰</h3><div id="ch-list"></div><div style="font-size:.66rem;color:#aaa;margin-top:5px">本週開始：<span id="ch-since"></span></div></div>
+  <div class="card"><h3>🌤️ 天氣系統</h3><div id="wx-det" style="font-size:.78rem;color:#555;margin-bottom:7px">點下方觀測</div><button class="btn btn-b btn-sm" onclick="forceWX()">☁️觀測天氣</button></div>
+  <div class="card"><h3>🌿 季節</h3><div id="season-det"></div></div>
+</div>
+<div class="panel" id="panel-rank">
+  <div class="card"><h3>🥇 等級排行</h3><div id="lb-lv"></div></div>
+  <div class="card"><h3>💰 金幣排行</h3><div id="lb-c"></div></div>
+  <div class="card"><h3>🌾 收成排行</h3><div id="lb-h"></div></div>
+</div>
+<div class="panel" id="panel-enc">
+  <div class="card"><h3>📖 作物圖鑑 <span id="enc-prog" style="font-size:.72rem;color:var(--g3)"></span></h3><div class="eg" id="enc-grid"></div></div>
+  <div class="card"><h3>🏷️ 稱號</h3><div id="titles-box"></div></div>
+</div>
+<div class="panel" id="panel-deco">
+  <div class="card"><h3>🏡 擺放中裝飾</h3><div class="deco-stage" id="deco-stage"></div><div style="font-size:.65rem;color:#999;margin-top:4px">點擊移除</div></div>
+  <div class="card"><h3>🛒 購買裝飾</h3><div class="sg" id="deco-shop"></div></div>
+</div>
+<div class="panel" id="panel-profile">
+  <div class="card" style="text-align:center">
+    <div id="pf-av" style="font-size:3.8rem;margin-bottom:4px">👨‍🌾</div>
+    <div id="pf-nm" style="font-size:1.05rem;font-weight:900;color:var(--g1)"></div>
+    <div id="pf-tl" class="badge" style="margin:5px auto;display:inline-block"></div>
+    <div style="font-size:.76rem;color:#666;margin-top:5px">Lv.<span id="pf-lv"></span> | XP <span id="pf-xp"></span>/<span id="pf-xn"></span></div>
+    <div class="pbar" style="margin:5px 14px"><div class="pfill pf-g" id="pf-xb" style="width:0%"></div></div>
+    <div class="btn-row" style="justify-content:center;margin-top:9px">
+      <button class="btn btn-g btn-sm" onclick="openAv()">更換頭像</button>
+      <button class="btn btn-b btn-sm" onclick="chgNm()">改名字</button>
+    </div>
+  </div>
+  <div class="card"><h3>📊 統計</h3><div id="pf-stats" style="font-size:.78rem;line-height:2;color:#333"></div></div>
+  <div class="card"><h3>🏆 成就</h3><div id="pf-badges"></div></div>
+</div>
+<div class="panel" id="panel-signin">
+  <div class="card">
+    <h3>📅 每日簽到</h3>
+    <div class="streak-bar">
+      <div>
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-label">連續簽到天數 🔥</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.78rem;opacity:.85">今日獎勵</div>
+        <div id="today-rew" style="font-size:1rem;font-weight:900">💰 100</div>
+      </div>
+    </div>
+    <div class="bonus-bar" id="bonus-bar">🎁 連簽7天額外獎勵：💰500 + 🌿肥料×3！</div>
+    <div class="signin-grid" id="signin-grid"></div>
+    <div style="text-align:center;margin-bottom:10px">
+      <button class="btn btn-g" id="btn-signin" onclick="doSignin()">✅ 立即簽到</button>
+      <div id="signin-msg" style="margin-top:7px;font-size:.78rem;color:#888"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🏆 簽到紀錄</h3>
+    <div id="signin-history" style="font-size:.76rem;color:#555;line-height:2"></div>
+  </div>
+  <div class="card">
+    <h3>🎁 連簽里程碑</h3>
+    <div id="signin-milestones"></div>
+  </div>
+</div>
+
+</div>
+<div class="mo" id="m-plant"><div class="mb"><button class="mc" onclick="cm('m-plant')">✕</button><h2>🌱 選擇種子</h2><div class="sg" id="plant-opts"></div></div></div>
+<div class="mo" id="m-cell"><div class="mb"><button class="mc" onclick="cm('m-cell')">✕</button><h2 id="m-ct">作物操作</h2><div id="m-cb"></div></div></div>
+<div class="mo" id="m-av"><div class="mb"><button class="mc" onclick="cm('m-av')">✕</button><h2>🎨 選擇頭像(100種)</h2><div class="av-grid" id="av-grid"></div></div></div>
+<div class="mo" id="m-nb"><div class="mb"><button class="mc" onclick="cm('m-nb')">✕</button><h2 id="m-nbt">鄰居農場</h2><div id="m-nbb"></div></div></div>
+<script>
+// ═══ DATA ═══
+const FISH_R=[
+  {id:'common',n:'超普通',cls:'rc',rate:25,color:'#9e9e9e'},
+  {id:'uncommon',n:'普通',cls:'ru',rate:20,color:'#4caf50'},
+  {id:'okay',n:'尚可',cls:'ro',rate:15,color:'#2196f3'},
+  {id:'good',n:'還好',cls:'rg',rate:10,color:'#9c27b0'},
+  {id:'fine',n:'下層',cls:'rf',rate:8,color:'#ff9800'},
+  {id:'mid',n:'中層',cls:'rm',rate:7,color:'#f44336'},
+  {id:'upper',n:'上層',cls:'rp',rate:5,color:'#e91e63'},
+  {id:'elite',n:'菁英',cls:'re',rate:4,color:'#ff6f00'},
+  {id:'super_elite',n:'超菁英',cls:'rse',rate:3,color:'#aa00ff'},
+  {id:'rare',n:'稀有',cls:'rr',rate:1.5,color:'#ff6d00'},
+  {id:'super_rare',n:'超稀有',cls:'rsr',rate:1,color:'#d50000'},
+  {id:'ultra_rare',n:'超級稀有',cls:'rur',rate:0.5,color:'#6200ea'},
+];
+const FISH=[
+  {id:'f1',n:'小鯽魚',ic:'🐟',rid:'common',sell:15,desc:'最常見小魚'},{id:'f2',n:'石斑仔',ic:'🐠',rid:'common',sell:12,desc:'淺灘常見'},
+  {id:'f3',n:'小泥鰍',ic:'🐡',rid:'common',sell:10,desc:'泥底生物'},{id:'f4',n:'水草魚',ic:'🌿',rid:'common',sell:8,desc:'藏於水草'},
+  {id:'f5',n:'小蝦',ic:'🦐',rid:'common',sell:20,desc:'跳跳小蝦'},{id:'f6',n:'小螃蟹',ic:'🦀',rid:'common',sell:25,desc:'橫行霸道'},
+  {id:'f7',n:'貝殼',ic:'🐚',rid:'common',sell:18,desc:'空的殼'},{id:'f54',n:'小鯰魚',ic:'🐟',rid:'common',sell:14,desc:'鬍鬚魚'},
+  {id:'f55',n:'溪哥',ic:'🐠',rid:'common',sell:11,desc:'台灣溪流'},{id:'f56',n:'花鰍',ic:'🐡',rid:'common',sell:9,desc:'花紋美麗'},
+  {id:'f8',n:'鯽魚',ic:'🐟',rid:'uncommon',sell:45,desc:'肉嫩味美'},{id:'f9',n:'草魚',ic:'🐠',rid:'uncommon',sell:50,desc:'愛吃草'},
+  {id:'f10',n:'白鰱',ic:'🐡',rid:'uncommon',sell:40,desc:'濾食魚'},{id:'f11',n:'鯉魚',ic:'🐟',rid:'uncommon',sell:60,desc:'吉祥魚'},
+  {id:'f12',n:'秋刀魚',ic:'🐠',rid:'uncommon',sell:55,desc:'細長身體'},{id:'f13',n:'沙丁魚',ic:'🐟',rid:'uncommon',sell:35,desc:'群游魚'},
+  {id:'f57',n:'小鯔',ic:'🐠',rid:'uncommon',sell:42,desc:'河口魚類'},{id:'f58',n:'旗鯛',ic:'🐡',rid:'uncommon',sell:58,desc:'旗子般鰭'},
+  {id:'f14',n:'吳郭魚',ic:'🐟',rid:'okay',sell:80,desc:'耐活力強'},{id:'f15',n:'鱸魚',ic:'🐠',rid:'okay',sell:100,desc:'白肉鮮美'},
+  {id:'f16',n:'黑鯛',ic:'🐡',rid:'okay',sell:90,desc:'岩礁魚類'},{id:'f17',n:'香魚',ic:'🐟',rid:'okay',sell:120,desc:'清香迷人'},
+  {id:'f18',n:'泥鰻',ic:'🐍',rid:'okay',sell:85,desc:'滑溜難抓'},{id:'f59',n:'慈鯛',ic:'🐡',rid:'okay',sell:95,desc:'護幼魚類'},
+  {id:'f60',n:'射水魚',ic:'💧',rid:'okay',sell:110,desc:'噴水打蟲'},
+  {id:'f19',n:'紅魽',ic:'🐠',rid:'good',sell:160,desc:'漂亮紅魚'},{id:'f20',n:'石斑魚',ic:'🐡',rid:'good',sell:180,desc:'珍貴食材'},
+  {id:'f21',n:'青魚',ic:'🐟',rid:'good',sell:150,desc:'大型淡水'},{id:'f22',n:'鱒魚',ic:'🐠',rid:'good',sell:200,desc:'冷水魚'},
+  {id:'f61',n:'蝶魚',ic:'🦋',rid:'good',sell:170,desc:'花紋如蝶'},{id:'f62',n:'鸚鵡魚',ic:'🦜',rid:'good',sell:190,desc:'啃食珊瑚'},
+  {id:'f23',n:'比目魚',ic:'🐡',rid:'fine',sell:250,desc:'兩眼同側'},{id:'f24',n:'鮪魚',ic:'🐟',rid:'fine',sell:300,desc:'深海速游'},
+  {id:'f25',n:'海鱺',ic:'🐠',rid:'fine',sell:280,desc:'養殖珍品'},{id:'f26',n:'河豚',ic:'🐡',rid:'fine',sell:350,desc:'劇毒鮮美'},
+  {id:'f63',n:'獅子魚',ic:'🦁',rid:'fine',sell:260,desc:'毒刺危險'},{id:'f64',n:'蓑鮋',ic:'🐡',rid:'fine',sell:320,desc:'奢華外型'},
+  {id:'f27',n:'鯖魚',ic:'🐟',rid:'mid',sell:400,desc:'Omega3豐富'},{id:'f28',n:'旗魚',ic:'🗡️',rid:'mid',sell:450,desc:'海中劍士'},
+  {id:'f29',n:'烏魚',ic:'🐟',rid:'mid',sell:500,desc:'秋冬珍品'},{id:'f30',n:'龍蝦',ic:'🦞',rid:'mid',sell:600,desc:'頂級食材'},
+  {id:'f65',n:'電光魚',ic:'⚡',rid:'mid',sell:420,desc:'發光深海'},{id:'f66',n:'深海鮟鱇',ic:'🔦',rid:'mid',sell:480,desc:'黑暗之燈'},
+  {id:'f31',n:'真鯛',ic:'🐠',rid:'upper',sell:700,desc:'喜慶魚類'},{id:'f32',n:'虎斑魚',ic:'🐡',rid:'upper',sell:800,desc:'猛虎花紋'},
+  {id:'f33',n:'黃魚',ic:'🟡',rid:'upper',sell:900,desc:'黃金之魚'},{id:'f34',n:'章魚',ic:'🐙',rid:'upper',sell:850,desc:'八爪智慧'},
+  {id:'f67',n:'棱皮龜',ic:'🐢',rid:'upper',sell:750,desc:'最大海龜'},{id:'f68',n:'虎鯊',ic:'🦈',rid:'upper',sell:820,desc:'虎紋花樣'},
+  {id:'f35',n:'鮭魚',ic:'🐟',rid:'elite',sell:1000,desc:'逆流而上'},{id:'f36',n:'劍旗魚',ic:'🗡️',rid:'elite',sell:1200,desc:'最快魚類'},
+  {id:'f37',n:'鯊魚',ic:'🦈',rid:'elite',sell:1500,desc:'海洋霸主'},{id:'f38',n:'巨章魚',ic:'🐙',rid:'elite',sell:1400,desc:'神秘深海'},
+  {id:'f69',n:'皇帶魚',ic:'👑',rid:'elite',sell:1100,desc:'海蛇傳說'},{id:'f70',n:'巨口魚',ic:'😱',rid:'elite',sell:1300,desc:'深淵猛獸'},
+  {id:'f39',n:'大白鯊',ic:'🦈',rid:'super_elite',sell:2000,desc:'恐懼象徵'},{id:'f40',n:'藍鰭鮪',ic:'🐟',rid:'super_elite',sell:2500,desc:'鮪魚之王'},
+  {id:'f41',n:'鬼蝠魟',ic:'🐡',rid:'super_elite',sell:2200,desc:'海洋滑翔'},{id:'f42',n:'翻車魚',ic:'🌞',rid:'super_elite',sell:2800,desc:'海中月亮'},
+  {id:'f71',n:'銀龍魚',ic:'🥈',rid:'super_elite',sell:2100,desc:'銀色優雅'},{id:'f72',n:'水晶魚',ic:'💎',rid:'super_elite',sell:2600,desc:'透明身體'},
+  {id:'f43',n:'金龍魚',ic:'🐉',rid:'rare',sell:5000,desc:'傳說吉祥'},{id:'f44',n:'七彩神仙',ic:'🌈',rid:'rare',sell:4500,desc:'最美淡水'},
+  {id:'f45',n:'龍王魚',ic:'🐟',rid:'rare',sell:6000,desc:'深淵君主'},{id:'f46',n:'電鰻',ic:'⚡',rid:'rare',sell:5500,desc:'生物電池'},
+  {id:'f73',n:'朱雀魚',ic:'🔴',rid:'rare',sell:5200,desc:'火焰之魚'},{id:'f74',n:'玄武魚',ic:'⬛',rid:'rare',sell:5800,desc:'黑暗守護'},
+  {id:'f47',n:'海龍王',ic:'🐉',rid:'super_rare',sell:10000,desc:'傳說龍族'},{id:'f48',n:'巨型鰻',ic:'🌊',rid:'super_rare',sell:9000,desc:'深海巨獸'},
+  {id:'f49',n:'幽靈魚',ic:'👻',rid:'super_rare',sell:12000,desc:'幾乎透明'},{id:'f50',n:'冰晶魚',ic:'❄️',rid:'super_rare',sell:11000,desc:'極地奇蹟'},
+  {id:'f75',n:'白虎魚',ic:'⬜',rid:'super_rare',sell:9500,desc:'百年一見'},{id:'f76',n:'青龍魚',ic:'💚',rid:'super_rare',sell:11500,desc:'東方神龍'},
+  {id:'f51',n:'神話龍魚',ic:'✨',rid:'ultra_rare',sell:30000,desc:'萬年一見'},{id:'f52',n:'彩虹鯨',ic:'🌈',rid:'ultra_rare',sell:28000,desc:'七色光芒'},
+  {id:'f53',n:'黃金巨鯊',ic:'🌟',rid:'ultra_rare',sell:35000,desc:'海洋之神'},{id:'f77',n:'鳳凰魚',ic:'🔥',rid:'ultra_rare',sell:32000,desc:'永恆傳說'},
+  {id:'f78',n:'麒麟魚',ic:'🦄',rid:'ultra_rare',sell:40000,desc:'至尊神獸'},{id:'f79',n:'玉皇魚',ic:'👑',rid:'ultra_rare',sell:50000,desc:'天界之魚'},
+  {id:'f80',n:'混沌古魚',ic:'🌀',rid:'ultra_rare',sell:99999,desc:'創世遺留'},
+];
+const SEEDS=[
+  {id:'carrot',n:'胡蘿蔔',ic:'🥕',buy:30,grow:60,sell:65,xp:10},{id:'tomato',n:'番茄',ic:'🍅',buy:50,grow:90,sell:110,xp:15},
+  {id:'corn',n:'玉米',ic:'🌽',buy:80,grow:120,sell:170,xp:20},{id:'wheat',n:'小麥',ic:'🌾',buy:20,grow:40,sell:45,xp:7},
+  {id:'strawberry',n:'草莓',ic:'🍓',buy:100,grow:150,sell:240,xp:30},{id:'pumpkin',n:'南瓜',ic:'🎃',buy:120,grow:180,sell:290,xp:36},
+  {id:'watermelon',n:'西瓜',ic:'🍉',buy:200,grow:240,sell:460,xp:52},{id:'eggplant',n:'茄子',ic:'🍆',buy:60,grow:100,sell:135,xp:18},
+  {id:'potato',n:'馬鈴薯',ic:'🥔',buy:40,grow:80,sell:90,xp:12},{id:'mushroom',n:'蘑菇',ic:'🍄',buy:150,grow:200,sell:360,xp:45},
+  {id:'blueberry',n:'藍莓',ic:'🫐',buy:180,grow:220,sell:430,xp:56},{id:'pepper',n:'辣椒',ic:'🌶️',buy:90,grow:130,sell:205,xp:26},
+  {id:'pineapple',n:'鳳梨',ic:'🍍',buy:250,grow:300,sell:620,xp:72},{id:'grape',n:'葡萄',ic:'🍇',buy:160,grow:210,sell:390,xp:49},
+  {id:'cherry',n:'櫻桃',ic:'🍒',buy:140,grow:190,sell:345,xp:43},
+  {id:'rainbow',n:'彩虹花',ic:'🌈',buy:999,grow:360,sell:1600,xp:200,rare:true},
+  {id:'dragon_s',n:'龍果',ic:'🐉',buy:999,grow:480,sell:2100,xp:300,rare:true},
+  {id:'golden',n:'黃金作物',ic:'✨',buy:999,grow:600,sell:3200,xp:500,rare:true},
+];
+const ANIMALS=[
+  {id:'chicken',n:'雞',ic:'🐔',prod:'🥚',pn:'雞蛋',ct:300,sell:80,cost:500,xp:10},
+  {id:'cow',n:'牛',ic:'🐄',prod:'🥛',pn:'牛奶',ct:600,sell:160,cost:1000,xp:18},
+  {id:'sheep',n:'羊',ic:'🐑',prod:'🧶',pn:'羊毛',ct:900,sell:220,cost:1500,xp:25},
+  {id:'horse',n:'馬',ic:'🐴',prod:'🏇',pn:'馬力',ct:1200,sell:300,cost:2000,xp:35},
+  {id:'pig',n:'豬',ic:'🐷',prod:'🥩',pn:'豬肉',ct:700,sell:180,cost:1200,xp:22},
+  {id:'tiger',n:'虎',ic:'🐯',prod:'🦷',pn:'虎牙',ct:1800,sell:500,cost:5000,xp:60},
+  {id:'rabbit',n:'兔',ic:'🐰',prod:'🍖',pn:'兔肉',ct:450,sell:130,cost:800,xp:15},
+  {id:'monkey',n:'猴',ic:'🐒',prod:'🍌',pn:'香蕉',ct:540,sell:150,cost:900,xp:17},
+];
+const RECIPES=[
+  {id:'r1',n:'胡蘿蔔湯',ic:'🥣',cat:'veg',ingr:['carrot','carrot'],sell:180,xp:20,desc:'暖胃好湯'},
+  {id:'r2',n:'番茄炒蛋',ic:'🍳',cat:'veg',ingr:['tomato','tomato'],sell:220,xp:25,desc:'家常美味'},
+  {id:'r3',n:'玉米濃湯',ic:'🥣',cat:'veg',ingr:['corn','corn'],sell:240,xp:28,desc:'濃郁香甜'},
+  {id:'r4',n:'草莓蛋糕',ic:'🍰',cat:'veg',ingr:['strawberry','strawberry','wheat'],sell:450,xp:50,desc:'甜蜜點心'},
+  {id:'r5',n:'南瓜派',ic:'🥧',cat:'veg',ingr:['pumpkin','wheat'],sell:380,xp:42,desc:'秋日限定'},
+  {id:'r6',n:'西瓜汁',ic:'🍹',cat:'veg',ingr:['watermelon'],sell:150,xp:15,desc:'消暑聖品'},
+  {id:'r7',n:'茄汁義麵',ic:'🍝',cat:'veg',ingr:['eggplant','tomato','wheat'],sell:520,xp:58,desc:'義式料理'},
+  {id:'r8',n:'馬鈴薯泥',ic:'🥔',cat:'veg',ingr:['potato','potato'],sell:160,xp:18,desc:'滑順香濃'},
+  {id:'r9',n:'蘑菇燉飯',ic:'🍚',cat:'veg',ingr:['mushroom','mushroom','wheat'],sell:600,xp:65,desc:'濃郁菌香'},
+  {id:'r10',n:'藍莓派',ic:'🫐',cat:'veg',ingr:['blueberry','blueberry','wheat'],sell:680,xp:72,desc:'森林風味'},
+  {id:'r11',n:'辣炒蔬菜',ic:'🥘',cat:'veg',ingr:['pepper','eggplant','tomato'],sell:400,xp:45,desc:'下飯好菜'},
+  {id:'r12',n:'鳳梨炒飯',ic:'🍍',cat:'veg',ingr:['pineapple','corn','wheat'],sell:750,xp:80,desc:'南洋風情'},
+  {id:'r13',n:'葡萄果凍',ic:'🍇',cat:'veg',ingr:['grape','grape'],sell:320,xp:35,desc:'晶瑩剔透'},
+  {id:'r14',n:'櫻桃甜湯',ic:'🍒',cat:'veg',ingr:['cherry','cherry'],sell:280,xp:32,desc:'清甜爽口'},
+  {id:'r15',n:'什錦蔬菜湯',ic:'🍲',cat:'veg',ingr:['carrot','potato','corn'],sell:350,xp:38,desc:'營養均衡'},
+  {id:'r16',n:'草莓大福',ic:'🍡',cat:'veg',ingr:['strawberry','wheat'],sell:300,xp:33,desc:'日式和菓子'},
+  {id:'r17',n:'南瓜濃湯',ic:'🎃',cat:'veg',ingr:['pumpkin','pumpkin'],sell:420,xp:48,desc:'金黃香濃'},
+  {id:'r18',n:'玉米脆餅',ic:'🫓',cat:'veg',ingr:['corn','wheat'],sell:190,xp:22,desc:'酥脆可口'},
+  {id:'r19',n:'清蒸鮮魚',ic:'🐟',cat:'fish',ingr:['f8'],sell:200,xp:25,desc:'鮮味保留'},
+  {id:'r20',n:'魚片壽司',ic:'🍣',cat:'fish',ingr:['f9','wheat'],sell:350,xp:40,desc:'日式精品'},
+  {id:'r21',n:'烤鱸魚',ic:'🔥',cat:'fish',ingr:['f15'],sell:280,xp:32,desc:'外酥內嫩'},
+  {id:'r22',n:'香魚鹽燒',ic:'🐟',cat:'fish',ingr:['f17'],sell:320,xp:36,desc:'清香獨特'},
+  {id:'r23',n:'石斑火鍋',ic:'🫕',cat:'fish',ingr:['f20','carrot','mushroom'],sell:800,xp:90,desc:'頂級海鮮'},
+  {id:'r24',n:'鮭魚壽司',ic:'🍣',cat:'fish',ingr:['f35','wheat'],sell:1200,xp:120,desc:'頂級食材'},
+  {id:'r25',n:'鯊魚翅湯',ic:'🦈',cat:'fish',ingr:['f37'],sell:2000,xp:200,desc:'頂奢料理'},
+  {id:'r26',n:'烤秋刀魚',ic:'🐟',cat:'fish',ingr:['f12'],sell:180,xp:20,desc:'炭火香氣'},
+  {id:'r27',n:'龍蝦沙拉',ic:'🦞',cat:'fish',ingr:['f30','strawberry'],sell:900,xp:95,desc:'豪華前菜'},
+  {id:'r28',n:'章魚燒',ic:'🐙',cat:'fish',ingr:['f34','wheat','corn'],sell:750,xp:80,desc:'大阪名物'},
+  {id:'r29',n:'河豚料理',ic:'🐡',cat:'fish',ingr:['f26'],sell:1100,xp:110,desc:'極致鮮味'},
+  {id:'r30',n:'魚湯拉麵',ic:'🍜',cat:'fish',ingr:['f8','wheat','mushroom'],sell:480,xp:52,desc:'鮮湯底'},
+  {id:'r31',n:'海鮮燉飯',ic:'🍚',cat:'mixed',ingr:['f14','mushroom','corn'],sell:680,xp:72,desc:'豐盛大餐'},
+  {id:'r32',n:'農家套餐',ic:'🍱',cat:'mixed',ingr:['carrot','tomato','potato','wheat'],sell:550,xp:60,desc:'豐盛組合'},
+  {id:'r33',n:'夏日冰淇淋',ic:'🍦',cat:'mixed',ingr:['strawberry','blueberry'],sell:400,xp:44,desc:'消暑甜品'},
+  {id:'r34',n:'節慶大餐',ic:'🎉',cat:'mixed',ingr:['pumpkin','corn','mushroom','carrot'],sell:1000,xp:100,desc:'節慶必備'},
+  {id:'r35',n:'漁夫大鍋',ic:'🫕',cat:'mixed',ingr:['f19','potato','corn','mushroom'],sell:1200,xp:120,desc:'鮮香四溢'},
+  {id:'r36',n:'農場壽司盒',ic:'🍱',cat:'mixed',ingr:['f24','strawberry','wheat','carrot'],sell:1500,xp:150,desc:'精美擺盤'},
+  {id:'r37',n:'彩虹沙拉',ic:'🥗',cat:'mixed',ingr:['carrot','tomato','eggplant','corn','strawberry'],sell:900,xp:95,desc:'五色均衡'},
+  {id:'r38',n:'豐收鍋',ic:'🍲',cat:'mixed',ingr:['potato','mushroom','corn','wheat','carrot'],sell:850,xp:88,desc:'五蔬齊備'},
+  {id:'h1',n:'龍皇大宴',ic:'🐉',cat:'hidden',ingr:['f79','pineapple','mushroom','cherry'],sell:99999,xp:9999,desc:'傳說宴席',hidden:true},
+  {id:'h2',n:'神農百草湯',ic:'🌿',cat:'hidden',ingr:['carrot','potato','mushroom','pepper','strawberry'],sell:5000,xp:500,desc:'百草精華',hidden:true},
+  {id:'h3',n:'混沌料理',ic:'🌀',cat:'hidden',ingr:['f80','rainbow','golden'],sell:50000,xp:5000,desc:'宇宙之味',hidden:true},
+  {id:'h4',n:'彩虹天鍋',ic:'🌈',cat:'hidden',ingr:['f53','watermelon','blueberry','cherry'],sell:20000,xp:2000,desc:'七色料理',hidden:true},
+  {id:'h5',n:'鳳凰烤全魚',ic:'🔥',cat:'hidden',ingr:['f77','pineapple','pepper'],sell:35000,xp:3500,desc:'神鳥料理',hidden:true},
+  {id:'h6',n:'豐收祭大餐',ic:'🎊',cat:'hidden',ingr:['carrot','corn','potato','wheat','mushroom','tomato'],sell:8000,xp:800,desc:'六種蔬菜',hidden:true},
+  {id:'h7',n:'農場英雄便當',ic:'🦸',cat:'hidden',ingr:['strawberry','cherry','grape','blueberry','pineapple'],sell:12000,xp:1200,desc:'五果大集合',hidden:true},
+  {id:'h8',n:'麒麟饗宴',ic:'🦄',cat:'hidden',ingr:['f78','f79','golden'],sell:80000,xp:8000,desc:'至尊料理',hidden:true},
+  {id:'h9',n:'星空大師',ic:'⭐',cat:'hidden',ingr:['f51','rainbow','cherry','grape'],sell:60000,xp:6000,desc:'星光閃耀',hidden:true},
+  {id:'h10',n:'全蔬精華鍋',ic:'🍀',cat:'hidden',ingr:['carrot','tomato','corn','wheat','strawberry','pumpkin'],sell:15000,xp:1500,desc:'六蔬滿貫',hidden:true},
+  {id:'h11',n:'海陸雙全',ic:'🏅',cat:'hidden',ingr:['f35','mushroom','corn'],sell:25000,xp:2500,desc:'山海齊備',hidden:true},
+  {id:'h12',n:'萬獸之王宴',ic:'👑',cat:'hidden',ingr:['f80','f79','f78','f77'],sell:999999,xp:99999,desc:'終極料理',hidden:true},
+];
+const ITEMS=[{id:'fert',n:'肥料',ic:'🌿',price:100,desc:'下次種植+50%成長'},{id:'pest',n:'除蟲劑',ic:'🐞',price:80,desc:'立即清除所有蟲害'},{id:'rain',n:'人工降雨',ic:'🌧️',price:120,desc:'立即澆所有田地'}];
+const DECOS=[{id:'pot',n:'花盆',ic:'🪴',p:200},{id:'fence',n:'圍欄',ic:'🪵',p:150},{id:'scare',n:'稻草人',ic:'🧑‍🌾',p:300},{id:'rainbow_d',n:'彩虹',ic:'🌈',p:500},{id:'fountain',n:'噴水池',ic:'⛲',p:600},{id:'windmill',n:'風車',ic:'🎠',p:400},{id:'lantern',n:'燈籠',ic:'🏮',p:250},{id:'bridge',n:'小橋',ic:'🌉',p:450},{id:'lotus',n:'蓮花池',ic:'🪷',p:350},{id:'tree_d',n:'大樹',ic:'🌳',p:280},{id:'bench',n:'長椅',ic:'🪑',p:180},{id:'statue',n:'雕像',ic:'🗿',p:800}];
+const WX=[{id:'sunny',lb:'☀️ 晴天',ds:'作物正常成長',fx:'normal'},{id:'cloudy',lb:'⛅ 多雲',ds:'成長稍慢',fx:'slow'},{id:'rainy',lb:'🌧️ 下雨',ds:'自動澆水！',fx:'water'},{id:'typhoon',lb:'🌪️ 颱風',ds:'可能蟲害！',fx:'damage'}];
+const SEASONS={spring:'🌸春季',summer:'☀️夏季',fall:'🍂秋季',winter:'❄️冬季'};
+const CHS=[{id:'h10',n:'豐收達人',desc:'本週收成10次',target:10,key:'wHarv',rew:500,rxp:100},{id:'f5',n:'釣魚高手',desc:'本週釣魚5次',target:5,key:'wFish',rew:300,rxp:60},{id:'c5',n:'料理達人',desc:'本週料理5次',target:5,key:'wCook',rew:300,rxp:60},{id:'w20',n:'勤勞農夫',desc:'本週澆水20次',target:20,key:'wWater',rew:400,rxp:80},{id:'p10',n:'除蟲衛士',desc:'本週除蟲10次',target:10,key:'wPest',rew:350,rxp:70}];
+const TITLES=[{id:'t1',n:'初心農夫',chk:s=>s.tHarv>=1},{id:'t2',n:'種植達人',chk:s=>s.tHarv>=20},{id:'t3',n:'農場大師',chk:s=>s.tHarv>=100},{id:'t4',n:'金幣富翁',chk:s=>s.coins>=10000},{id:'t5',n:'釣魚高手',chk:s=>s.tFish>=20},{id:'t6',n:'廚藝達人',chk:s=>s.tCook>=20},{id:'t7',n:'作物收藏家',chk:s=>s.collected.length>=10},{id:'t8',n:'圖鑑完成',chk:s=>s.collected.length>=SEEDS.filter(x=>!x.rare).length},{id:'t9',n:'裝飾大師',chk:s=>(s.decos||[]).length>=8},{id:'t10',n:'社交達人',chk:s=>(s.friends||[]).length>=10},{id:'t11',n:'釣魚傳說',chk:s=>s.tFish>=100},{id:'t12',n:'資深農場主',chk:s=>s.level>=10},{id:'t13',n:'廚神',chk:s=>s.tCook>=50},{id:'t14',n:'魚王',chk:s=>(s.fishCaught||[]).length>=30}];
+const AVATARS=['👨‍🌾','👩‍🌾','🧑‍🌾','👴','👵','🧓','👦','👧','🧒','👨','👩','🧑','👨‍💼','👩‍💼','🧑‍💼','👨‍🎓','👩‍🎓','🧑‍🎓','👨‍🍳','👩‍🍳','🧑‍🍳','👨‍🔬','👩‍🔬','🧑‍🔬','👨‍🎨','👩‍🎨','🧑‍🎨','👨‍🚀','👩‍🚀','🧑‍🚀','👨‍⚕️','👩‍⚕️','🧑‍⚕️','👨‍🏫','👩‍🏫','🧑‍🏫','🐱','🐶','🐺','🦊','🐻','🐼','🐨','🦁','🐯','🦝','🐸','🐙','🦄','🐉','🦋','🦅','🦜','🐧','🐢','🦖','👻','🤖','👽','🎭','🧙‍♂️','🧙‍♀️','🧝‍♂️','🧝‍♀️','🧜‍♀️','🧜‍♂️','🧟','🧛','🧞‍♂️','🧞‍♀️','🕵️','💂','🤠','🥷','🎅','🤶','🥸','😎','🤓','🧐','😈','👿','🤡','🎃','💀','👾','🤩','🥳','😻','🙈','🙉','🙊','💪','🦸','🦸‍♀️','🦹','🦹‍♀️'];
+const NB_NAMES=['小明','小花','阿嬤','大壯','秀英','阿明','淑芬','建國','麗珍','阿土','國強','美玲','志偉','淑華','阿福','桂花','天賜','素珍','阿海','小翠','豐收王','種菜神','綠野人','田園詩','播種者','土地魂','蔬果俠','農場王','鋤禾人'];
+const CHAT_LINES=['番茄豐收🍅','有人要換種子嗎？','颱風快保護作物！','天氣好，種菜！','扭蛋抽到龍果！🐉','誰的狗跑我農場😡','互送禮物🎁','排行榜好難超越','料理成功！🍳','釣到大魚🐟','評分100分！','挑戰完成！','釣到神話龍魚！✨'];
+const EXP=[{slots:25,n:'標準(5×5)',cost:0},{slots:36,n:'中型(6×6)',cost:2000},{slots:49,n:'大型(7×7)',cost:5000},{slots:64,n:'豪華(8×8)',cost:12000}];
+const FESTS=[
+  {id:'spring',n:'春假活動',ic:'🌸',bg:'bg-spring',months:[3,4],desc:'春暖花開！作物+20%成長！',rew:800,task:'收成5次',tKey:'wHarv',tVal:5},
+  {id:'cny',n:'春節大慶',ic:'🧧',bg:'bg-cny',months:[1,2],desc:'新年快樂！紅包大放送！',rew:2000,task:'收成10次',tKey:'wHarv',tVal:10},
+  {id:'dragon',n:'端午節',ic:'🐉',bg:'bg-dragon',months:[6],desc:'龍舟競賽！釣魚雙倍獎勵！',rew:1000,task:'釣魚5次',tKey:'wFish',tVal:5},
+  {id:'summer',n:'暑假派對',ic:'☀️',bg:'bg-summer',months:[7,8],desc:'夏日農場派對！作物+15%售價！',rew:1200,task:'料理5次',tKey:'wCook',tVal:5},
+  {id:'midautumn',n:'中秋節',ic:'🥮',bg:'bg-midautumn',months:[9,10],desc:'月圓人團圓！月餅特別獎勵！',rew:1500,task:'料理3次',tKey:'wCook',tVal:3},
+  {id:'xmas',n:'聖誕節',ic:'🎄',bg:'bg-xmas',months:[12],desc:'聖誕快樂！神秘禮物盒！',rew:2500,task:'收成15次',tKey:'wHarv',tVal:15},
+];
+// ═══ STORAGE ═══
+const UK='hf6_u',SK='hf6_s';
+const gU=()=>{try{return JSON.parse(localStorage.getItem(UK)||'{}')}catch{return{}}};
+const sU=u=>localStorage.setItem(UK,JSON.stringify(u));
+const gS=()=>localStorage.getItem(SK)||'';
+const sS=u=>localStorage.setItem(SK,u);
+const cS=()=>localStorage.removeItem(SK);
+function hp(p){let h=0;for(let i=0;i<p.length;i++)h=(Math.imul(31,h)+p.charCodeAt(i))|0;return h.toString(36);}
+let CU='',S={};
+function swA(t){['li','rg'].forEach(x=>{document.getElementById('at-'+x).classList.toggle('active',x===t);document.getElementById('a-'+x).style.display=x===t?'':'none';});document.getElementById('a-msg').textContent='';}
+function aM(t,e){const el=document.getElementById('a-msg');el.textContent=t;el.style.color=e?'#e53935':'#2e7d32';}
+function doLI(){const u=document.getElementById('li-u').value.trim(),p=document.getElementById('li-p').value;if(!u||!p){aM('請填帳號與密碼',true);return;}const us=gU();if(!us[u]){aM('帳號不存在',true);return;}if(us[u].pass!==hp(p)){aM('密碼錯誤',true);return;}loginAs(u);}
+function doRG(){const u=document.getElementById('rg-u').value.trim(),p=document.getElementById('rg-p').value,p2=document.getElementById('rg-p2').value;if(u.length<2||u.length>16){aM('帳號需2-16字',true);return;}if(p.length<4){aM('密碼至少4字',true);return;}if(p!==p2){aM('兩次密碼不同',true);return;}const us=gU();if(us[u]){aM('帳號已存在',true);return;}const st=defS();st.name=u;us[u]={pass:hp(p),state:serS(st)};sU(us);aM('✅ 註冊成功！');setTimeout(()=>loginAs(u),700);}
+function loginAs(u){CU=u;sS(u);const us=gU();S=desS(us[u].state||defS());while(S.cells.length<S.farmSize)S.cells.push(null);if(!S.neighbors||S.neighbors.length<300)genNB();['chat','decos','auctionItems','fishCaught','fishTank','cookedRecipes','festivalDone'].forEach(k=>{if(!S[k])S[k]=[];});if(!S.ingredients)S.ingredients={};if(Date.now()-S.weekStart>7*24*3600*1000)wkReset();document.getElementById('auth-screen').style.display='none';document.getElementById('app').style.display='block';buildAll();notify('🌾 歡迎回來，'+S.name+'！');}
+function doLO(){save();cS();CU='';S={};document.getElementById('auth-screen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('li-u').value='';document.getElementById('li-p').value='';notify('👋 已登出');}
+function defS(){return{coins:500,level:1,xp:0,xpNext:100,name:'農夫',avatar:'👨‍🌾',currentTitle:'',farmSize:25,cells:Array(25).fill(null),animals:{chicken:null,cow:null,sheep:null,horse:null,pig:null,tiger:null,rabbit:null,monkey:null},inv:{fert:0,pest:0,rain:0},nextFert:false,guardDog:0,weather:'sunny',season:'spring',lastWaterAll:0,lastPestAll:0,neighbors:[],friends:[],chat:[],decos:[],auctionItems:[],collected:[],cDone:[],titles:[],wHarv:0,wFish:0,wCook:0,wWater:0,wPest:0,tHarv:0,tFish:0,tCook:0,weekStart:Date.now(),farmRating:0,fishCaught:[],fishTank:[],ingredients:{},cookedRecipes:[],recipeBook:false,festivalDone:[],sfx:true,signIn:{streak:0,lastDate:'',totalDays:0,history:[],claimedToday:false}};}
+function serS(s){const o={...s};['collected','cDone','titles','fishCaught','fishTank','chat','decos','auctionItems','cookedRecipes','festivalDone'].forEach(k=>{o[k]=Array.isArray(s[k])?[...s[k]]:[];});o.signIn=s.signIn||{streak:0,lastDate:'',totalDays:0,history:[],claimedToday:false};return o;}
+function desS(o){if(!o)return defS();const s={...defS(),...o};['collected','cDone','titles','fishCaught','fishTank','chat','decos','auctionItems','cookedRecipes','festivalDone'].forEach(k=>{s[k]=Array.isArray(o[k])?[...o[k]]:[];});if(!s.signIn||typeof s.signIn!=='object')s.signIn={streak:0,lastDate:'',totalDays:0,history:[],claimedToday:false};if(!s.ingredients||typeof s.ingredients!=='object')s.ingredients={};if(!s.animals||typeof s.animals!=='object')s.animals={chicken:null,cow:null,sheep:null,horse:null,pig:null,tiger:null,rabbit:null,monkey:null};ANIMALS.forEach(a=>{if(s.animals[a.id]===undefined)s.animals[a.id]=null;});return s;}
+function save(){if(!CU)return;const us=gU();if(us[CU])us[CU].state=serS(S);sU(us);}
+// ═══ SFX ═══
+let AC=null;
+function gAC(){if(!AC)try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return AC;}
+function tone(f,d,t='sine',v=0.28){if(!S.sfx)return;try{const a=gAC();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t;o.frequency.setValueAtTime(f,a.currentTime);g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+d);o.start();o.stop(a.currentTime+d);}catch(e){}}
+function sfxH(){tone(523,.08);setTimeout(()=>tone(659,.08),80);setTimeout(()=>tone(784,.15),160);}
+function sfxC(){tone(880,.05,'triangle');setTimeout(()=>tone(1100,.1,'triangle'),60);}
+function sfxF(){tone(220,.05,'sawtooth');setTimeout(()=>tone(440,.08),60);setTimeout(()=>tone(660,.15),130);}
+function sfxR(){[0,80,160,240].forEach((d,i)=>setTimeout(()=>tone(440+i*110,.1,'square'),d));}
+function sfxK(){tone(392,.06);setTimeout(()=>tone(523,.06),70);setTimeout(()=>tone(659,.12),140);}
+function sfxL(){[0,100,200,300].forEach((d,i)=>setTimeout(()=>tone([523,659,784,1047][i],.15),d));}
+function sfxB(){tone(440,.05,'triangle');}
+function sfxE(){tone(200,.15,'sawtooth',.2);}
+function togSFX(){S.sfx=!S.sfx;document.getElementById('sfx-btn').textContent=S.sfx?'🔊':'🔇';save();}
+// ═══ INIT ═══
+window.addEventListener('DOMContentLoaded',()=>{const ses=gS();if(ses){const us=gU();if(us[ses]){loginAs(ses);return;}}});
+function buildAll(){setupTabs();buildFG();buildSeedShop();buildItemShop();buildDecoShop();buildDecoStage();buildExpShop();buildSaleShop();buildAuc();buildNBList();buildFrList();buildChat();buildCH();renderWX();renderSeason();renderLBs();buildEnc();renderProfile();updDog();updHdr();updInv();buildAnimals();buildFarmAnims();buildFishTab();buildCookTab();buildFests();buildSignin();startTimers();document.getElementById('sfx-btn').textContent=S.sfx?'🔊':'🔇';}
+function setupTabs(){document.querySelectorAll('#wtab .tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById('panel-'+t.dataset.tab).classList.add('active');const tb=t.dataset.tab;if(tb==='rank')renderLBs();if(tb==='enc')buildEnc();if(tb==='profile')renderProfile();if(tb==='social'){buildNBList();buildFrList();}if(tb==='deco'){buildDecoStage();buildDecoShop();}if(tb==='fishing')buildFishTab();if(tb==='cooking')buildCookTab();if(tb==='animals')buildAnimals();if(tb==='festival')buildFests();if(tb==='signin')buildSignin();});});}
+function notify(msg,type=''){const el=document.createElement('div');el.className='toast'+(type?' '+type:'');el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),3500);}
+function updHdr(){document.getElementById('hd-c').textContent=S.coins.toLocaleString();document.getElementById('hd-l').textContent=S.level;document.getElementById('hd-x').textContent=S.xp;document.getElementById('hd-av').textContent=S.avatar+' '+S.name;}
+function addXP(n){S.xp+=n;while(S.xp>=S.xpNext){S.xp-=S.xpNext;S.level++;S.xpNext=Math.floor(S.xpNext*1.35);S.coins+=S.level*60;sfxL();notify(`🎉 升級！Lv.${S.level}！+${S.level*60}💰`);}updHdr();chkTitles();}
+// ═══ FARM ═══
+function buildFG(){const c=Math.round(Math.sqrt(S.farmSize));document.getElementById('farm-grid').style.gridTemplateColumns=`repeat(${c},1fr)`;while(S.cells.length<S.farmSize)S.cells.push(null);renderFG();}
+function renderFG(){const g=document.getElementById('farm-grid');if(!g)return;const now=Date.now();g.innerHTML='';for(let i=0;i<S.farmSize;i++){const c=S.cells[i];const div=document.createElement('div');div.className='cell'+(c?'':' empty');if(!c){div.innerHTML='<div class="cell-icon">🟫</div><div class="cell-name">空地</div>';div.onclick=()=>openPlant(i);}else{const sd=SEEDS.find(x=>x.id===c.sid);if(!sd){S.cells[i]=null;div.innerHTML='<div class="cell-icon">🟫</div><div class="cell-name">空地</div>';div.onclick=()=>openPlant(i);g.appendChild(div);continue;}const gt=c.boosted?sd.grow*.5:sd.grow;const el=(now-c.planted)/1000;const pct=Math.min(1,el/gt);const rdy=pct>=1;let ico=sd.ic;if(pct<.3)ico='🌱';else if(pct<.7)ico='🌿';let badge=c.watered&&!rdy?'💧':'';if(c.pest)badge='🐛';if(rdy)div.classList.add('ready');div.innerHTML=`<div class="cell-icon">${ico}</div><div class="cell-name">${sd.n}</div><div class="cell-timer">${rdy?'可收成！':Math.ceil((gt-el)/60)+'分'}</div><div class="cell-badge">${badge}</div>`;div.onclick=()=>openCell(i);}g.appendChild(div);}}
+let aci=-1,pci=-1;
+function openCell(i){aci=i;const c=S.cells[i];if(!c){openPlant(i);return;}const sd=SEEDS.find(x=>x.id===c.sid);if(!sd)return;const now=Date.now();const gt=c.boosted?sd.grow*.5:sd.grow;const el=(now-c.planted)/1000;const rdy=el>=gt;document.getElementById('m-ct').textContent=sd.ic+' '+sd.n;let html='';if(rdy)html=`<p style="color:var(--g2);font-weight:700;margin-bottom:9px">✅ 可以收成！</p><button class="btn btn-g" onclick="hvC(${i})">🌾 收成(+${sd.sell}💰)</button>`;else{html=`<p style="font-size:.78rem;margin-bottom:9px">⏱ 還需 <b>${Math.ceil((gt-el)/60)}</b> 分鐘</p><div class="btn-row">`;if(!c.watered)html+=`<button class="btn btn-b btn-sm" onclick="waC(${i})">💧澆水</button>`;else html+=`<span style="color:var(--b3);font-size:.76rem">💧已澆水</span>`;if(c.pest)html+=`<button class="btn btn-r btn-sm" onclick="peC(${i})">🐛除蟲</button>`;if(S.inv.fert>0)html+=`<button class="btn btn-g btn-sm" onclick="feC(${i})">🌿肥料</button>`;html+='</div>';}html+=`<br><button class="btn btn-br btn-sm" onclick="rmC(${i})">🗑️拔除</button>`;document.getElementById('m-cb').innerHTML=html;om('m-cell');}
+function hvC(i){const c=S.cells[i];if(!c)return;const sd=SEEDS.find(x=>x.id===c.sid);if(!sd)return;const gt=c.boosted?sd.grow*.5:sd.grow;if((Date.now()-c.planted)/1000<gt){notify('作物未成熟！','warn');return;}S.coins+=sd.sell;addXP(sd.xp);if(!S.collected.includes(sd.id))S.collected.push(sd.id);if(!S.ingredients)S.ingredients={};S.ingredients[sd.id]=(S.ingredients[sd.id]||0)+1;S.tHarv++;S.wHarv++;S.cells[i]=null;sfxH();sfxC();notify(`🌾 ${sd.ic}${sd.n}！+${sd.sell}💰`);cm('m-cell');renderFG();save();updHdr();chkCH();chkTitles();buildEnc();updIngr();}
+function waC(i){const c=S.cells[i];if(!c||c.watered)return;c.watered=true;c.planted-=10000;S.wWater++;addXP(2);notify('💧澆水！');cm('m-cell');renderFG();save();chkCH();}
+function peC(i){const c=S.cells[i];if(!c||!c.pest)return;c.pest=false;S.wPest++;addXP(3);notify('🐛除蟲！');cm('m-cell');renderFG();save();chkCH();}
+function feC(i){if(S.inv.fert<=0){notify('沒有肥料！','warn');return;}S.inv.fert--;S.cells[i].boosted=true;notify('🌿肥料生效！');cm('m-cell');renderFG();save();updInv();}
+function rmC(i){S.cells[i]=null;notify('🗑️已拔除');cm('m-cell');renderFG();save();}
+function harvestAll(){let cnt=0,coins=0,xp=0;const now=Date.now();S.cells.forEach((c,i)=>{if(!c)return;const sd=SEEDS.find(x=>x.id===c.sid);if(!sd)return;const gt=c.boosted?sd.grow*.5:sd.grow;if((now-c.planted)/1000>=gt){coins+=sd.sell;xp+=sd.xp;if(!S.collected.includes(sd.id))S.collected.push(sd.id);if(!S.ingredients)S.ingredients={};S.ingredients[sd.id]=(S.ingredients[sd.id]||0)+1;S.tHarv++;S.wHarv++;S.cells[i]=null;cnt++;}});if(cnt){S.coins+=coins;addXP(xp);sfxH();sfxC();notify(`🌾 收成${cnt}格！+${coins}💰`);renderFG();save();updHdr();chkCH();chkTitles();buildEnc();updIngr();}else notify('沒有可收成的作物','warn');}
+const CD=3600000;
+document.getElementById('btn-wa').addEventListener('click',()=>{const now=Date.now();const rem=CD-(now-S.lastWaterAll);if(rem>0){sfxE();notify(`💧冷卻中！還需${Math.ceil(rem/60000)}分`,'warn');return;}let cnt=0;S.cells.forEach(c=>{if(c&&!c.watered){c.watered=true;c.planted-=10000;cnt++;}});S.lastWaterAll=now;S.wWater+=cnt;addXP(cnt*2);notify(`💧全部澆水！共${cnt}格`);renderFG();save();chkCH();});
+document.getElementById('btn-pa').addEventListener('click',()=>{const now=Date.now();const rem=CD-(now-S.lastPestAll);if(rem>0){sfxE();notify(`🐛冷卻中！還需${Math.ceil(rem/60000)}分`,'warn');return;}let cnt=0;S.cells.forEach(c=>{if(c&&c.pest){c.pest=false;cnt++;}});S.lastPestAll=now;S.wPest+=cnt;addXP(cnt*3);notify(`🐛全部除蟲！清除${cnt}個`);renderFG();save();chkCH();});
+function updCD(){const now=Date.now();const wr=CD-(now-S.lastWaterAll),pr=CD-(now-S.lastPestAll);const wb=document.getElementById('btn-wa'),pb=document.getElementById('btn-pa');const wt=document.getElementById('cd-w'),pt=document.getElementById('cd-p');if(wb){wb.disabled=wr>0;if(wt)wt.textContent=wr>0?`💧冷卻${Math.ceil(wr/60000)}分`:'';}if(pb){pb.disabled=pr>0;if(pt)pt.textContent=pr>0?`🐛冷卻${Math.ceil(pr/60000)}分`:'';};}
+function openPlant(i){pci=i;const div=document.getElementById('plant-opts');div.innerHTML='';SEEDS.filter(s=>!s.rare).forEach(sd=>{const el=document.createElement('div');el.className='si';el.innerHTML=`<span class="si-ic">${sd.ic}</span><div class="si-n">${sd.n}</div><div class="si-p">💰${sd.buy}</div><div class="si-note">售${sd.sell}💰 +${sd.xp}XP</div>`;el.onclick=()=>plantSD(sd);div.appendChild(el);});om('m-plant');}
+function plantSD(sd){if(S.coins<sd.buy){sfxE();notify('金幣不足！','err');return;}S.coins-=sd.buy;const boosted=!!S.nextFert;S.nextFert=false;S.cells[pci]={sid:sd.id,planted:Date.now(),watered:false,pest:false,boosted};addXP(3);sfxB();notify(`🌱${sd.ic}${sd.n}！`+(boosted?' (肥料)':''));cm('m-plant');renderFG();save();updHdr();}
+// ═══ ANIMALS ═══
+function buildAnimals(){const md=document.getElementById('my-anims'),bd=document.getElementById('buy-anims');if(!md||!bd)return;md.innerHTML='';bd.innerHTML='';ANIMALS.forEach(a=>{const ow=S.animals[a.id];if(ow){const rdy=Date.now()>=ow.next;const el=document.createElement('div');el.className='acard owned'+(rdy?' rdy':'');el.innerHTML=`<span class="ai">${a.ic}</span><div class="an">${a.n}</div><div class="as">${rdy?'✅可收集！':'⏳等待中'}</div><div style="font-size:.6rem;color:#888;margin-top:2px">${a.prod}${a.pn}</div>`;if(rdy)el.onclick=()=>collectA(a.id);md.appendChild(el);}else{const el=document.createElement('div');el.className='acard';el.innerHTML=`<span class="ai" style="opacity:.25">${a.ic}</span><div class="an">${a.n}</div><div class="as" style="color:#aaa">未購買</div><div style="font-size:.6rem;margin-top:3px">💰${a.cost}</div>`;el.onclick=()=>buyA(a.id);bd.appendChild(el);}});if(!md.innerHTML)md.innerHTML='<p style="font-size:.74rem;color:#aaa;padding:7px">尚未購買動物</p>';if(!bd.innerHTML)bd.innerHTML='<p style="font-size:.74rem;color:var(--g2);padding:7px">✅所有動物已購買！</p>';}
+function buildFarmAnims(){const div=document.getElementById('farm-anims');if(!div)return;div.innerHTML='';ANIMALS.forEach(a=>{const ow=S.animals[a.id];if(!ow)return;const rdy=Date.now()>=ow.next;const el=document.createElement('div');el.className='acard'+(rdy?' rdy':' owned');el.innerHTML=`<span class="ai">${a.ic}</span><div class="an">${a.n}</div><div class="as">${rdy?'✅可收集':'⏳等待'}</div>`;if(rdy)el.onclick=()=>{collectA(a.id);buildFarmAnims();};div.appendChild(el);});if(!div.innerHTML)div.innerHTML='<p style="font-size:.72rem;color:#aaa">到商城購買動物</p>';}
+function buyA(id){const a=ANIMALS.find(x=>x.id===id);if(!a)return;if(S.coins<a.cost){sfxE();notify('金幣不足！','err');return;}S.coins-=a.cost;S.animals[id]={next:Date.now()+a.ct*1000};sfxB();notify(`${a.ic}購買了${a.n}！`);updHdr();save();buildAnimals();buildFarmAnims();}
+function collectA(id){const a=ANIMALS.find(x=>x.id===id);if(!a)return;const ow=S.animals[id];if(!ow||Date.now()<ow.next){notify('還沒準備好！','warn');return;}S.coins+=a.sell;addXP(a.xp);ow.next=Date.now()+a.ct*1000;sfxC();notify(`${a.ic}收集${a.pn}！+${a.sell}💰`);updHdr();save();buildAnimals();buildFarmAnims();}
+function collectAll(){let cnt=0;ANIMALS.forEach(a=>{const ow=S.animals[a.id];if(ow&&Date.now()>=ow.next){S.coins+=a.sell;addXP(a.xp);ow.next=Date.now()+a.ct*1000;cnt++;}});if(cnt){sfxC();notify(`🐾 收集${cnt}種動物產品！`);updHdr();save();buildAnimals();buildFarmAnims();}else notify('目前沒有可收集的','warn');}
+// ═══ FISHING ═══
+let fishActive=false,curFish=null,fishTm=null;
+function buildFishTab(){buildFishTank();buildFishEnc();}
+function startFish(){if(fishActive)return;if(S.coins<10){sfxE();notify('需要10💰！','err');return;}S.coins-=10;fishActive=true;updHdr();save();const btn=document.getElementById('btn-fish');if(btn)btn.disabled=true;const res=document.getElementById('fish-res');if(res)res.style.display='none';const st=document.getElementById('fish-st');if(st)st.textContent='🎣 釣魚中…等待15秒！';const fill=document.getElementById('ftfill');if(fill){fill.style.transition='none';fill.style.width='100%';setTimeout(()=>{fill.style.transition='width 15s linear';fill.style.width='0%';},50);}const sw=document.getElementById('fish-swim');let si=setInterval(()=>{if(!sw)return;const rf=FISH[Math.floor(Math.random()*FISH.length)];const left=Math.random()>.5;sw.style.cssText=`position:absolute;font-size:1.7rem;top:${45+Math.random()*30}%;left:${left?'-5%':'100%'};transition:left 4s linear`;sw.textContent=rf.ic;setTimeout(()=>{sw.style.left=left?'110%':'-10%';},100);},2200);let bob=false;const bobEl=document.getElementById('bobber');let bi=setInterval(()=>{bob=!bob;if(bobEl)bobEl.style.top=bob?'46%':'43%';},700);fishTm=setTimeout(()=>{clearInterval(si);clearInterval(bi);fishActive=false;if(btn)btn.disabled=false;const f=rollFish();curFish=f;showFishRes(f);S.wFish++;S.tFish++;if(!S.fishCaught.includes(f.id))S.fishCaught.push(f.id);chkCH();chkTitles();save();buildFishEnc();sfxF();if(['rare','super_rare','ultra_rare','elite','super_elite'].includes(f.rid))sfxR();},15000);}
+function rollFish(){const tot=FISH_R.reduce((a,r)=>a+r.rate,0);let r=Math.random()*tot;let rid='common';for(const ra of FISH_R){r-=ra.rate;if(r<=0){rid=ra.id;break;}}const pool=FISH.filter(f=>f.rid===rid);return pool.length?pool[Math.floor(Math.random()*pool.length)]:FISH[0];}
+function showFishRes(f){const rar=FISH_R.find(r=>r.id===f.rid)||FISH_R[0];const res=document.getElementById('fish-res');if(res)res.style.display='block';const ic=document.getElementById('fr-ic');if(ic)ic.textContent=f.ic;const rb=document.getElementById('fr-rb');if(rb){rb.textContent=rar.n;rb.className='rb '+rar.cls;}const nm=document.getElementById('fr-nm');if(nm)nm.textContent=f.n;const ds=document.getElementById('fr-ds');if(ds)ds.textContent=f.desc+' | 售💰'+f.sell;const st=document.getElementById('fish-st');if(st)st.textContent='🎉 釣到了！';}
+function sellFish(){if(!curFish)return;S.coins+=curFish.sell;sfxC();notify(`💰賣掉${curFish.ic}${curFish.n}！+${curFish.sell}💰`);updHdr();save();curFish=null;const res=document.getElementById('fish-res');if(res)res.style.display='none';const st=document.getElementById('fish-st');if(st)st.textContent='花費10💰・15秒看看釣到什麼！';}
+function keepFish(){if(!curFish)return;if(S.fishTank.length>=20){notify('魚缸已滿（最多20條）！','warn');return;}S.fishTank.push({...curFish});S.ingredients[curFish.id]=(S.ingredients[curFish.id]||0)+1;notify(`🐟${curFish.n}放入魚缸！可用於料理`);curFish=null;const res=document.getElementById('fish-res');if(res)res.style.display='none';const st=document.getElementById('fish-st');if(st)st.textContent='花費10💰・15秒看看釣到什麼！';buildFishTank();updIngr();save();}
+function buildFishTank(){const div=document.getElementById('fish-tank');if(!div)return;div.innerHTML='';const ct=document.getElementById('tank-ct');if(ct)ct.textContent=`${S.fishTank.length}/20`;S.fishTank.forEach((f,i)=>{const el=document.createElement('div');el.style.cssText='background:#fff;border:2px solid #90caf9;border-radius:7px;padding:4px;text-align:center;cursor:pointer;font-size:1.3rem';el.title=`${f.n} 點擊出售`;el.textContent=f.ic;el.onclick=()=>{S.coins+=f.sell;S.fishTank.splice(i,1);sfxC();notify(`💰出售${f.ic}${f.n}！+${f.sell}💰`);updHdr();save();buildFishTank();};div.appendChild(el);});if(!S.fishTank.length)div.innerHTML='<span style="font-size:.7rem;color:#aaa">魚缸是空的</span>';}
+function buildFishEnc(){const div=document.getElementById('fish-enc');if(!div)return;const ct=document.getElementById('fenc-ct');if(ct)ct.textContent=`${S.fishCaught.length}/${FISH.length}`;div.innerHTML='';FISH.forEach(f=>{const got=S.fishCaught.includes(f.id);const rar=FISH_R.find(r=>r.id===f.rid)||FISH_R[0];const el=document.createElement('div');el.className='ei'+(got?' got':' lk');el.style.borderColor=got?rar.color:'#ddd';el.innerHTML=`<span class="ei-ic">${got?f.ic:'❓'}</span><div>${got?f.n:'???'}</div>`;div.appendChild(el);});}
+// ═══ COOKING ═══
+let rFil='all';
+function buildCookTab(){updIngr();renderRec();}
+function updIngr(){const div=document.getElementById('ingr-box');if(!div)return;div.innerHTML='';const ingr=S.ingredients||{};let any=false;SEEDS.filter(s=>!s.rare).forEach(sd=>{const cnt=ingr[sd.id]||0;if(!cnt)return;any=true;const el=document.createElement('div');el.style.cssText='background:#fff;border:1.5px solid var(--border);border-radius:7px;padding:3px 7px;font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:3px';el.innerHTML=`${sd.ic}${sd.n} <span style="background:var(--g3);color:#fff;border-radius:99px;padding:1px 5px">${cnt}</span>`;div.appendChild(el);});FISH.forEach(f=>{const cnt=ingr[f.id]||0;if(!cnt)return;any=true;const el=document.createElement('div');el.style.cssText='background:#e3f2fd;border:1.5px solid #90caf9;border-radius:7px;padding:3px 7px;font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:3px';el.innerHTML=`${f.ic}${f.n} <span style="background:#1976d2;color:#fff;border-radius:99px;padding:1px 5px">${cnt}</span>`;div.appendChild(el);});if(!any)div.innerHTML='<span style="font-size:.7rem;color:#bbb">收成作物或釣魚放入魚缸後顯示食材</span>';}
+function filterR(f){rFil=f;['all','veg','fish','mixed','hidden'].forEach(k=>{const el=document.getElementById('rf-'+k);if(el){el.style.background=k===f?'var(--g2)':'#ddd';el.style.color=k===f?'#fff':'#333';}});renderRec();}
+function renderRec(){const div=document.getElementById('rec-list');if(!div)return;let list=rFil==='all'?RECIPES:RECIPES.filter(r=>r.cat===rFil);const ct=document.getElementById('rec-ct');if(ct)ct.textContent=`${S.cookedRecipes.length}/${RECIPES.length}`;div.innerHTML='';list.forEach(r=>{const isH=r.hidden&&!S.recipeBook&&!S.cookedRecipes.includes(r.id);const card=document.createElement('div');card.className='rcard'+(isH?' lk':'');if(isH){card.innerHTML='<div style="display:flex;align-items:center;gap:7px"><span style="font-size:1.4rem">🔒</span><div><div style="font-weight:700;font-size:.8rem;color:#aaa">??? 隱藏食譜</div><div style="font-size:.65rem;color:#bbb">購買食譜書或嘗試各種組合解鎖</div></div></div>';}else{const ok=canCook(r);const done=S.cookedRecipes.includes(r.id);const ingrHTML=r.ingr.map(id=>{const sd=SEEDS.find(x=>x.id===id);const fi=FISH.find(x=>x.id===id);const lbl=sd?sd.ic+sd.n:fi?fi.ic+fi.n:'?';const have=(S.ingredients||{})[id]||0;return`<span class="it ${have>0?'':'ms'}">${lbl}</span>`;}).join('');card.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:7px"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:1.4rem">${r.ic}</span><div><div style="font-weight:900;font-size:.82rem">${r.n}${done?' ✅':''}</div><div style="font-size:.63rem;color:#777">${r.desc} | 售💰${r.sell}</div></div></div><button class="btn ${ok?'btn-or':'btn-br'} btn-sm" onclick="cookR('${r.id}')" ${ok?'':'disabled'}>${ok?'料理！':'食材不足'}</button></div><div class="ir">${ingrHTML}</div>`;}div.appendChild(card);});}
+function canCook(r){const ingr=S.ingredients||{};const cnt={};for(const id of r.ingr)cnt[id]=(cnt[id]||0)+1;return Object.entries(cnt).every(([id,need])=>(ingr[id]||0)>=need);}
+function cookR(rid){const r=RECIPES.find(x=>x.id===rid);if(!r||!canCook(r)){sfxE();notify('食材不足！','err');return;}const cnt={};for(const id of r.ingr)cnt[id]=(cnt[id]||0)+1;Object.entries(cnt).forEach(([id,need])=>{S.ingredients[id]-=need;});S.coins+=r.sell;addXP(r.xp);S.tCook++;S.wCook++;if(!S.cookedRecipes.includes(r.id))S.cookedRecipes.push(r.id);sfxK();sfxC();notify(`🍳${r.ic}${r.n}！+${r.sell}💰 +${r.xp}XP`);updHdr();save();updIngr();renderRec();chkCH();chkTitles();}
+function buyRB(){if(S.recipeBook){notify('已擁有食譜書！','warn');return;}if(S.coins<100000){sfxE();notify('需要100,000💰！','err');return;}S.coins-=100000;S.recipeBook=true;sfxB();notify('📖食譜書購買！所有食譜解鎖！');const el=document.getElementById('rb-st');if(el)el.textContent='✅已擁有食譜書';updHdr();save();renderRec();}
+// ═══ SHOP ═══
+function buildSeedShop(){const div=document.getElementById('seed-shop');if(!div)return;div.innerHTML='';SEEDS.filter(s=>!s.rare).forEach(sd=>{const el=document.createElement('div');el.className='si';el.innerHTML=`<span class="si-ic">${sd.ic}</span><div class="si-n">${sd.n}</div><div class="si-p">💰${sd.buy}</div><div class="si-note">售${sd.sell}💰</div>`;el.onclick=()=>{const ei=S.cells.findIndex(c=>!c);if(ei===-1){notify('農場沒有空地！','warn');return;}pci=ei;plantSD(sd);};div.appendChild(el);});}
+function buildItemShop(){const div=document.getElementById('item-shop');if(!div)return;div.innerHTML='';ITEMS.forEach(it=>{const el=document.createElement('div');el.className='si';el.innerHTML=`<span class="si-ic">${it.ic}</span><div class="si-n">${it.n}</div><div class="si-p">💰${it.price}</div><div class="si-note">${it.desc}</div>`;el.onclick=()=>buyItem(it);div.appendChild(el);});}
+function buyItem(it){if(S.coins<it.price){sfxE();notify('金幣不足！','err');return;}S.coins-=it.price;sfxB();if(it.id==='fert'){S.inv.fert++;S.nextFert=true;notify('🌿肥料！下次種植生效');}else if(it.id==='pest'){let cnt=0;S.cells.forEach(c=>{if(c&&c.pest){c.pest=false;cnt++;}});S.wPest+=cnt;addXP(cnt*2);notify(`🐞除蟲！清除${cnt}個`);renderFG();chkCH();}else if(it.id==='rain'){let cnt=0;S.cells.forEach(c=>{if(c&&!c.watered){c.watered=true;c.planted-=8000;cnt++;}});S.wWater+=cnt;addXP(cnt*2);notify(`🌧️人工降雨！澆了${cnt}格`);renderFG();chkCH();}updHdr();save();updInv();}
+function updInv(){['f','p','r'].forEach((k,i)=>{const el=document.getElementById('inv-'+k);if(el)el.textContent=['fert','pest','rain'].map(x=>S.inv[x]||0)[i];});}
+function buyDog(){if(S.coins<10000){sfxE();notify('需要10,000💰！','err');return;}S.coins-=10000;S.guardDog=Date.now()+3*86400000;sfxB();notify('🐕看門狗！保護3天！');updHdr();save();updDog();}
+function updDog(){const el=document.getElementById('dog-st');if(!el)return;if(S.guardDog&&Date.now()<S.guardDog){const d=Math.ceil((S.guardDog-Date.now())/86400000);el.textContent=`🐕保護中（剩${d}天）`;}else el.textContent='';}
+function buildSaleShop(){const div=document.getElementById('sale-shop');if(!div)return;div.innerHTML='';const day=new Date().getDate();const pool=SEEDS.filter(s=>!s.rare);[pool[day%pool.length],pool[(day+2)%pool.length],pool[(day+5)%pool.length]].forEach(sd=>{const disc=Math.floor(sd.buy*.55);const el=document.createElement('div');el.className='si';el.innerHTML=`<span class="si-ic">${sd.ic}</span><div class="si-n">${sd.n}</div><div class="si-p" style="text-decoration:line-through;color:#bbb">💰${sd.buy}</div><div class="si-p" style="color:var(--red2)">特賣💰${disc}</div>`;el.onclick=()=>{if(S.coins<disc){notify('金幣不足！','err');return;}S.coins-=disc;const ei=S.cells.findIndex(c=>!c);if(ei!==-1){S.cells[ei]={sid:sd.id,planted:Date.now(),watered:false,pest:false,boosted:false};renderFG();notify(`🛍️特賣${sd.ic}${sd.n}！`);}else notify('購入種子（農場已滿）','warn');updHdr();save();};div.appendChild(el);});}
+function buildExpShop(){const div=document.getElementById('exp-shop');if(!div)return;div.innerHTML='';EXP.forEach(opt=>{const ow=S.farmSize>=opt.slots;const el=document.createElement('div');el.style.cssText='background:#fff;border:2px solid var(--border);border-radius:9px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;font-size:.81rem';el.innerHTML=`<b>${opt.n}</b>`+(ow?'<span style="color:var(--g3);font-weight:700">✅已擁有</span>':`<button class="btn btn-gold btn-sm" onclick="expFarm(${opt.slots},${opt.cost})">💰${opt.cost.toLocaleString()}</button>`);div.appendChild(el);});}
+function expFarm(slots,cost){if(S.farmSize>=slots){notify('已是此大小','warn');return;}if(S.coins<cost){sfxE();notify('金幣不足！','err');return;}S.coins-=cost;S.farmSize=slots;while(S.cells.length<slots)S.cells.push(null);sfxB();notify(`🏗️農場擴建到${slots}格！`);updHdr();save();buildFG();buildExpShop();}
+function doGacha(){if(S.coins<200){sfxE();notify('需要200💰！','err');return;}S.coins-=200;const wt=SEEDS.map(s=>s.rare?1:10);const tot=wt.reduce((a,b)=>a+b,0);let r=Math.random()*tot;let idx=0;for(let i=0;i<wt.length;i++){r-=wt[i];if(r<=0){idx=i;break;}}const w=SEEDS[idx];sfxR();const el=document.getElementById('gacha-res');if(el)el.textContent=w.ic;const ei=S.cells.findIndex(c=>!c);if(ei!==-1){S.cells[ei]={sid:w.id,planted:Date.now(),watered:false,pest:false,boosted:false};renderFG();}notify(`🎰${w.ic}${w.n}！${w.rare?'★★★稀有！':''}`);updHdr();save();}
+function buildAuc(){const div=document.getElementById('auc-list');if(!div)return;if(!S.auctionItems||!S.auctionItems.length){div.innerHTML='<p style="font-size:.74rem;color:#aaa">目前無拍賣</p>';return;}div.innerHTML='';S.auctionItems.forEach((it,i)=>{const row=document.createElement('div');row.className='arow';row.innerHTML=`<span style="font-size:1.2rem">${it.ic}</span><span style="flex:1;font-size:.78rem;font-weight:700">${it.n}</span><span style="font-size:.7rem;color:#888">by ${it.seller}</span><span style="font-size:.76rem;font-weight:900;color:var(--g1)">💰${it.price}</span><button class="btn btn-gold btn-sm" onclick="bidAuc(${i})">出價</button>`;div.appendChild(row);});}
+function listAuc(){if(!S.collected.length){notify('尚未收成任何作物','warn');return;}const sd=SEEDS.find(s=>s.id===S.collected[0]);if(!sd)return;S.auctionItems.push({ic:sd.ic,n:sd.n,price:sd.sell,seller:S.name});notify(`📦${sd.ic}${sd.n}上架！`);buildAuc();save();}
+function bidAuc(i){const it=S.auctionItems[i];if(!it)return;if(S.coins<it.price){notify('金幣不足！','err');return;}S.coins-=it.price;S.auctionItems.splice(i,1);sfxC();notify(`🎉拍賣成功！獲得${it.ic}${it.n}！`);updHdr();buildAuc();save();}
+// ═══ WEATHER & SEASON ═══
+function renderWX(){const w=WX.find(x=>x.id===S.weather)||WX[0];const strip=document.getElementById('wx-strip');if(strip)strip.textContent=`${w.lb} — ${w.ds}`;const card=document.getElementById('wx-card');if(card)card.textContent=`${w.lb} — ${w.ds}`;}
+function forceWX(){const idx=Math.floor(Math.random()*WX.length);S.weather=WX[idx].id;const w=WX[idx];if(w.fx==='water'){let cnt=0;S.cells.forEach(c=>{if(c&&!c.watered){c.watered=true;c.planted-=8000;cnt++;}});notify(`🌧️下雨！自動澆水${cnt}格`);renderFG();}else if(w.fx==='damage'){let cnt=0;S.cells.forEach(c=>{if(c&&!c.pest&&Math.random()<.3){c.pest=true;cnt++;}});if(cnt)notify(`🌪️颱風！${cnt}格蟲害！`,'warn');renderFG();}else notify(`${w.lb}！${w.ds}`);const det=document.getElementById('wx-det');if(det)det.textContent=`天氣：${w.lb} — ${w.ds}`;renderWX();save();}
+function renderSeason(){const div=document.getElementById('season-det');if(!div)return;const crops=SEEDS.filter(s=>s.season&&s.season.includes(S.season)&&!s.rare).map(s=>s.ic+s.n).join('、')||'各種作物';div.innerHTML=`<b>${SEASONS[S.season]}</b><br><span style="font-size:.74rem">特色作物：${crops}</span>`;}
+// ═══ FESTIVALS ═══
+function buildFests(){const div=document.getElementById('fest-list');if(!div)return;div.innerHTML='';const month=new Date().getMonth()+1;FESTS.forEach(f=>{const active=f.months.includes(month);const done=(S.festivalDone||[]).includes(f.id);const pv=S[f.tKey]||0;const pct=Math.min(100,Math.round(pv/f.tVal*100));const card=document.createElement('div');card.className=`fc ${f.bg} ${active?'fc-active':'fc-off'}`;card.innerHTML=`<div class="fc-ic">${f.ic}</div><h3>${f.ic} ${f.n}</h3><p>${f.desc}</p>${active?`<div style="background:rgba(255,255,255,.2);border-radius:7px;padding:5px 9px;margin-bottom:7px;font-size:.74rem"><b>任務：</b>${f.task}<div class="pbar" style="margin-top:3px;background:rgba(255,255,255,.3)"><div class="pfill" style="background:#fff;width:${pct}%"></div></div><div style="margin-top:2px;font-size:.65rem">${pv}/${f.tVal}</div></div>${!done&&pv>=f.tVal?`<button class="btn btn-gold btn-sm" onclick="claimF('${f.id}',${f.rew})">🎁領取💰${f.rew}</button>`:(done?'<span style="background:rgba(255,255,255,.3);border-radius:7px;padding:3px 9px;font-size:.72rem;font-weight:700">✅已領取</span>':'')}`:(!active?`<div style="background:rgba(0,0,0,.2);border-radius:7px;padding:5px 9px;font-size:.72rem">活動期間：${f.months.map(m=>m+'月').join('、')}</div>`:'')}`;div.appendChild(card);});}
+function claimF(id,rew){if((S.festivalDone||[]).includes(id))return;S.festivalDone.push(id);S.coins+=rew;addXP(rew/5);sfxL();notify(`🎉節慶獎勵+${rew}💰！`);updHdr();save();buildFests();}
+// ═══ SOCIAL ═══
+function genNB(){S.neighbors=[];for(let i=0;i<300;i++){const n=NB_NAMES[i%NB_NAMES.length]+(i>=NB_NAMES.length?i:'');S.neighbors.push({id:i,name:n,av:AVATARS[i%AVATARS.length],level:~~(Math.random()*20+1),coins:~~(Math.random()*20000),harv:~~(Math.random()*500)});}}
+function buildNBList(){const div=document.getElementById('nb-list');if(!div)return;div.innerHTML='';S.neighbors.slice(0,30).forEach(nb=>{const row=document.createElement('div');row.className='frow';row.innerHTML=`<span style="font-size:1.15rem">${nb.av}</span><span style="flex:1;font-size:.77rem;font-weight:700">${nb.name} Lv.${nb.level}</span><span style="font-size:.68rem;color:#888">💰${nb.coins.toLocaleString()}</span><button class="btn btn-g btn-sm" style="margin-left:5px" onclick="visitNB(${nb.id})">拜訪</button>`;div.appendChild(row);});const m=document.createElement('p');m.style.cssText='font-size:.65rem;color:#aaa;text-align:center;padding:4px';m.textContent=`前30位，共${S.neighbors.length}位鄰居`;div.appendChild(m);}
+function visitRnd(){visitNB(S.neighbors[~~(Math.random()*S.neighbors.length)].id);}
+function visitNB(id){const nb=S.neighbors.find(x=>x.id===id);if(!nb)return;document.getElementById('m-nbt').textContent=`${nb.av} ${nb.name} 的農場`;const icons=['🥕','🍅','🌽','🌾','🍓','🎃','🍉','🍆','🥔','🍄'];let h='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:9px">';for(let i=0;i<25;i++){const ico=Math.random()>.3?icons[~~(Math.random()*icons.length)]:'🟫';h+=`<div style="background:#795548;border-radius:5px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1rem">${ico}</div>`;}h+='</div>';const hg=nb.id%7===0;h+=`<p style="font-size:.74rem;color:#555;margin-bottom:7px">Lv.${nb.level} | 💰${nb.coins.toLocaleString()}</p>${hg?'<p style="color:var(--red2);font-size:.72rem">🐕有看門狗！</p>':`<button class="btn btn-r btn-sm" onclick="steal(${nb.id})">🥕偷菜</button>`}`;document.getElementById('m-nbb').innerHTML=h;om('m-nb');}
+function steal(id){const nb=S.neighbors.find(x=>x.id===id);if(!nb)return;const got=~~(Math.random()*100+20);S.coins+=got;addXP(5);notify(`🥕從${nb.name}偷到${got}💰！`,'warn');cm('m-nb');updHdr();save();}
+function buildFrList(){const div=document.getElementById('fr-list');if(!div)return;div.innerHTML='';if(!S.friends||!S.friends.length){div.innerHTML='<p style="font-size:.74rem;color:#aaa">還沒有好友</p>';return;}S.friends.forEach(f=>{const row=document.createElement('div');row.className='frow';const on=Math.random()>.5;row.innerHTML=`<span style="font-size:1.15rem">${f.av}</span><span style="flex:1;font-size:.77rem;font-weight:700">${f.name}</span><span class="fdot ${on?'on':'off'}"></span><button class="btn btn-gold btn-sm" style="margin-left:5px" onclick="sendGift('${f.id}')">🎁</button>`;div.appendChild(row);});}
+function addFr(){if((S.friends||[]).length>=50){notify('好友已達50人','warn');return;}const av=S.neighbors.filter(n=>!(S.friends||[]).find(f=>f.id===n.id));if(!av.length){notify('沒有可加的鄰居','warn');return;}const nb=av[~~(Math.random()*av.length)];if(!S.friends)S.friends=[];S.friends.push({id:nb.id,name:nb.name,av:nb.av});notify(`✅加了好友${nb.av}${nb.name}！`);buildFrList();save();chkTitles();}
+function sendGift(fid){const f=(S.friends||[]).find(x=>x.id==fid);if(!f)return;if(S.coins<50){notify('需要50💰','err');return;}S.coins-=50;const sd=SEEDS[~~(Math.random()*8)];const ei=S.cells.findIndex(c=>!c);if(ei!==-1){S.cells[ei]={sid:sd.id,planted:Date.now(),watered:false,pest:false,boosted:false};renderFG();notify(`🎁${f.name}回贈${sd.ic}${sd.n}！`);}else notify(`🎁送禮給${f.name}！`);updHdr();save();}
+function giftAll(){if(!S.friends||!S.friends.length){notify('沒有好友','warn');return;}const cost=S.friends.length*30;if(S.coins<cost){notify(`需要${cost}💰！`,'err');return;}S.coins-=cost;addXP(S.friends.length*3);sfxC();notify(`🎁送禮給全部${S.friends.length}位！`);updHdr();save();}
+function buildChat(){renderChat();}
+function renderChat(){const box=document.getElementById('chatbox');if(!box)return;box.innerHTML='';(S.chat||[]).slice(-40).forEach(m=>{const el=document.createElement('div');el.className=`cm ${m.me?'mine':'theirs'}`;el.innerHTML=`<div class="cm-who">${m.av||'🤖'}${m.name}</div>${m.text}`;box.appendChild(el);});box.scrollTop=box.scrollHeight;}
+function sendChat(){const inp=document.getElementById('chat-in');if(!inp)return;const text=inp.value.trim();if(!text)return;S.chat.push({name:S.name,av:S.avatar,text,me:true});inp.value='';renderChat();save();}
+function aiChat(){if(!S.neighbors||!S.neighbors.length)return;const nb=S.neighbors[~~(Math.random()*S.neighbors.length)];const line=CHAT_LINES[~~(Math.random()*CHAT_LINES.length)];S.chat.push({name:nb.name,av:nb.av,text:line,me:false});if(S.chat.length>80)S.chat.shift();renderChat();save();}
+function rateFarm(){const f=S.cells.filter(Boolean).length;const a=Object.values(S.animals).filter(Boolean).length;const score=Math.min(100,f*2+a*5+(S.decos||[]).length*3+S.level*2);S.farmRating=score;const c=['充滿生機！','作物豐盈！','多養動物吧！','裝飾很美！','繼續加油！'][~~(Math.random()*5)];const r=S.neighbors[~~(Math.random()*S.neighbors.length)];const box=document.getElementById('rating-box');if(box)box.innerHTML=`<b>${r.av}${r.name}</b>給你評：<b style="font-size:1.2rem;color:var(--g2)">${score}/100</b><br><i style="font-size:.72rem;color:#777">"${c}"</i>`;notify(`⭐${r.name}給你${score}分！`);save();}
+// ═══ CHALLENGES ═══
+function buildCH(){const div=document.getElementById('ch-list');if(!div)return;const since=new Date(S.weekStart);const el2=document.getElementById('ch-since');if(el2)el2.textContent=`${since.getMonth()+1}/${since.getDate()}`;div.innerHTML='';CHS.forEach(ch=>{const val=S[ch.key]||0;const done=(S.cDone||[]).includes(ch.id);const pct=Math.min(100,Math.round(val/ch.target*100));const row=document.createElement('div');row.className=`chrow${done?' done':''}`;row.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:.82rem">${ch.n}</b>${done?'<span class="badge">✅完成</span>':''}</div><p style="font-size:.7rem;color:#666;margin:3px 0">${ch.desc}</p><div style="display:flex;align-items:center;gap:5px"><div class="pbar" style="flex:1"><div class="pfill pf-go" style="width:${pct}%"></div></div><span style="font-size:.68rem;min-width:45px;text-align:right">${val}/${ch.target}</span></div>${!done&&val>=ch.target?`<button class="btn btn-gold btn-sm" style="margin-top:5px" onclick="claimCH('${ch.id}',${ch.rew},${ch.rxp})">🎁領取💰${ch.rew}</button>`:''}`;div.appendChild(row);});}
+function chkCH(){buildCH();}
+function claimCH(id,rew,rxp){if((S.cDone||[]).includes(id))return;S.cDone.push(id);S.coins+=rew;addXP(rxp);sfxL();notify(`🎯挑戰完成！+${rew}💰 +${rxp}XP`);updHdr();buildCH();save();}
+function wkReset(){S.wHarv=0;S.wFish=0;S.wCook=0;S.wWater=0;S.wPest=0;S.cDone=[];S.weekStart=Date.now();notify('🗓️每週挑戰重置！');save();}
+// ═══ LEADERBOARD ═══
+function renderLBs(){renderLB('lb-lv',n=>n.level,n=>`Lv.${n.level}`);renderLB('lb-c',n=>n.coins,n=>`💰${n.coins.toLocaleString()}`);renderLB('lb-h',n=>n.harv,n=>`🌾${n.harv}`);}
+function renderLB(divId,sf,df){const div=document.getElementById(divId);if(!div)return;const me={id:'__me',name:S.name,av:S.avatar,level:S.level,coins:S.coins,harv:S.tHarv};const all=[me,...(S.neighbors||[]).slice(0,60)].sort((a,b)=>sf(b)-sf(a));const medals=['🥇','🥈','🥉'];div.innerHTML='';all.slice(0,15).forEach((n,i)=>{const isme=n.id==='__me';const row=document.createElement('div');row.className='lb-row'+(isme?' me':'');row.innerHTML=`<div class="lb-rk">${i<3?medals[i]:i+1}</div><div class="lb-av">${n.av}</div><div class="lb-nm">${n.name}${isme?' (你)':''}</div><div class="lb-vl">${df(n)}</div>`;div.appendChild(row);});}
+// ═══ ENCYCLOPEDIA ═══
+function buildEnc(){const g=document.getElementById('enc-grid');if(!g)return;const ns=SEEDS.filter(s=>!s.rare);const cnt=ns.filter(s=>S.collected.includes(s.id)).length;const ep=document.getElementById('enc-prog');if(ep)ep.textContent=`${cnt}/${ns.length}`;g.innerHTML='';ns.forEach(sd=>{const got=S.collected.includes(sd.id);const el=document.createElement('div');el.className='ei'+(got?' got':' lk');el.innerHTML=`<span class="ei-ic">${got?sd.ic:'❓'}</span><div>${got?sd.n:'???'}</div>`;g.appendChild(el);});renderTitles();}
+function renderTitles(){const div=document.getElementById('titles-box');if(!div)return;div.innerHTML='';TITLES.forEach(t=>{const u=t.chk(S);const el=document.createElement('span');el.className='badge'+(u?'':' lk');el.style.background=u?'var(--gold)':'#ddd';el.style.color=u?'#000':'#aaa';el.textContent=(u?'✅ ':'🔒 ')+t.n;div.appendChild(el);});}
+function chkTitles(){TITLES.forEach(t=>{if(t.chk(S)&&!(S.titles||[]).includes(t.id)){S.titles.push(t.id);S.currentTitle=t.n;sfxL();notify(`🏷️解鎖稱號：${t.n}！`);}});save();}
+// ═══ DECORATIONS ═══
+function buildDecoShop(){const div=document.getElementById('deco-shop');if(!div)return;div.innerHTML='';DECOS.forEach(d=>{const el=document.createElement('div');el.className='si';el.innerHTML=`<span class="si-ic">${d.ic}</span><div class="si-n">${d.n}</div><div class="si-p">💰${d.p}</div>`;el.onclick=()=>{if(S.coins<d.p){notify('金幣不足！','err');return;}S.coins-=d.p;S.decos.push({ic:d.ic,n:d.n});sfxB();notify(`🎨${d.ic}${d.n}！`);updHdr();buildDecoStage();save();chkTitles();};div.appendChild(el);});}
+function buildDecoStage(){const stage=document.getElementById('deco-stage');if(!stage)return;stage.innerHTML='';if(!S.decos||!S.decos.length){stage.innerHTML='<span style="font-size:.72rem;color:#bbb">還沒有裝飾</span>';return;}S.decos.forEach((d,i)=>{const el=document.createElement('div');el.className='dp';el.title='點擊移除';el.textContent=d.ic;el.onclick=()=>{S.decos.splice(i,1);notify(`🗑️移除${d.ic}${d.n}`);buildDecoStage();save();};stage.appendChild(el);});}
+// ═══ PROFILE ═══
+function renderProfile(){const f=id=>document.getElementById(id);f('pf-av').textContent=S.avatar;f('pf-nm').textContent=S.name;f('pf-tl').textContent=S.currentTitle||'無稱號';f('pf-lv').textContent=S.level;f('pf-xp').textContent=S.xp;f('pf-xn').textContent=S.xpNext;f('pf-xb').style.width=Math.round(S.xp/S.xpNext*100)+'%';f('pf-stats').innerHTML=[`💰金幣：${S.coins.toLocaleString()}`,`🌾總收成：${S.tHarv}次`,`🎣總釣魚：${S.tFish}次`,`🐟已釣魚種：${S.fishCaught.length}/${FISH.length}`,`🍳總料理：${S.tCook}次`,`📖已解鎖食譜：${S.cookedRecipes.length}/${RECIPES.length}`,`👥好友：${(S.friends||[]).length}/50`,`🎨裝飾：${S.decos.length}件`].join('<br>');const pb=f('pf-badges');pb.innerHTML='';if(!S.titles||!S.titles.length)pb.innerHTML='<p style="font-size:.72rem;color:#aaa">尚無成就</p>';else S.titles.forEach(tid=>{const t=TITLES.find(x=>x.id===tid);if(t){const el=document.createElement('span');el.className='badge';el.textContent=t.n;pb.appendChild(el);}});}
+function openAv(){const g=document.getElementById('av-grid');g.innerHTML='';AVATARS.forEach(av=>{const el=document.createElement('div');el.className='av-opt'+(S.avatar===av?' sel':'');el.textContent=av;el.onclick=()=>{S.avatar=av;updHdr();renderProfile();document.querySelectorAll('.av-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');notify('✅頭像已更換！');save();};g.appendChild(el);});om('m-av');}
+function chgNm(){const n=prompt('輸入新名字（最多8字）：',S.name);if(n&&n.trim()){S.name=n.trim().slice(0,8);updHdr();renderProfile();notify('✅名字已更換！');save();}}
+// ═══ MODALS ═══
+function om(id){document.getElementById(id).classList.add('open');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+// ═══ AI TICK ═══
+function aiTick(){if(!CU||!S.cells)return;const now=Date.now();if(Math.random()<.06)S.cells.forEach(c=>{if(c&&!c.pest&&Math.random()<.07)c.pest=true;});if((!S.guardDog||now>S.guardDog)&&Math.random()<.04){const ri=S.cells.findIndex(c=>{if(!c)return false;const sd=SEEDS.find(x=>x.id===c.sid);if(!sd)return false;return(now-c.planted)/1000>=(c.boosted?sd.grow*.5:sd.grow);});if(ri!==-1){const sd=SEEDS.find(x=>x.id===S.cells[ri].sid);const nb=S.neighbors[~~(Math.random()*S.neighbors.length)];S.cells[ri]=null;notify(`😡${nb.av}${nb.name}偷了你的${sd?.ic||''}${sd?.n||'作物'}！`,'err');renderFG();save();}}if(Math.random()<.06){const nb=S.neighbors[~~(Math.random()*S.neighbors.length)];let helped=false;S.cells.forEach(c=>{if(c&&!c.watered&&Math.random()<.08){c.watered=true;c.planted-=6000;helped=true;}if(c&&c.pest&&Math.random()<.08){c.pest=false;helped=true;}});if(helped){notify(`🤝${nb.av}${nb.name}幫你澆水/除蟲！`);renderFG();save();}}updDog();}
+
+// ═══ DAILY SIGNIN ═══
+const SIGNIN_REWARDS=[
+  {day:1,ic:'💰',n:'金幣',val:100},{day:2,ic:'💰',n:'金幣',val:150},
+  {day:3,ic:'🌿',n:'肥料',val:2},{day:4,ic:'💰',n:'金幣',val:200},
+  {day:5,ic:'🐞',n:'除蟲劑',val:2},{day:6,ic:'💰',n:'金幣',val:300},
+  {day:7,ic:'🎁',n:'大禮包',val:500},
+  {day:8,ic:'💰',n:'金幣',val:200},{day:9,ic:'🌿',n:'肥料',val:3},
+  {day:10,ic:'💰',n:'金幣',val:400},{day:11,ic:'🌧️',n:'人工降雨',val:2},
+  {day:12,ic:'💰',n:'金幣',val:350},{day:13,ic:'🐞',n:'除蟲劑',val:3},
+  {day:14,ic:'🎁',n:'超級禮包',val:1000},
+  {day:15,ic:'💰',n:'金幣',val:500},{day:16,ic:'🌿',n:'肥料',val:5},
+  {day:17,ic:'💰',n:'金幣',val:600},{day:18,ic:'🌧️',n:'人工降雨',val:3},
+  {day:19,ic:'💰',n:'金幣',val:700},{day:20,ic:'🐞',n:'除蟲劑',val:5},
+  {day:21,ic:'🎁',n:'月度大禮',val:2000},
+  {day:22,ic:'💰',n:'金幣',val:800},{day:23,ic:'🌿',n:'肥料',val:8},
+  {day:24,ic:'💰',n:'金幣',val:900},{day:25,ic:'🌧️',n:'人工降雨',val:5},
+  {day:26,ic:'💰',n:'金幣',val:1000},{day:27,ic:'🐞',n:'除蟲劑',val:8},
+  {day:28,ic:'🏆',n:'傳奇禮包',val:5000},
+  {day:29,ic:'💰',n:'金幣',val:1200},{day:30,ic:'🌟',n:'月滿禮',val:8000},
+];
+const MILESTONES=[
+  {days:3,ic:'🌱',n:'三天農夫',rew:'💰300'},
+  {days:7,ic:'🌾',n:'一週豐收',rew:'💰500+🌿×3'},
+  {days:14,ic:'🏅',n:'兩週堅持',rew:'💰1000+🐞×3'},
+  {days:21,ic:'🥇',n:'三週達人',rew:'💰2000+🌧️×3'},
+  {days:30,ic:'👑',n:'月簽傳說',rew:'💰5000+全套道具'},
+  {days:60,ic:'💎',n:'雙月榮耀',rew:'💰15000'},
+  {days:100,ic:'🌟',n:'百日老農',rew:'💰50000'},
+];
+
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+
+function buildSignin(){
+  if(!S.signIn)S.signIn={streak:0,lastDate:'',totalDays:0,history:[],claimedToday:false};
+  const si=S.signIn;
+  const today=todayStr();
+  // Reset claimedToday if date changed
+  if(si.lastDate!==today)si.claimedToday=false;
+  // Calculate current cycle day (1-30)
+  const cycleDay=((si.totalDays)%30)+1;
+  const todayRew=SIGNIN_REWARDS.find(r=>r.day===cycleDay)||SIGNIN_REWARDS[0];
+
+  // Update streak bar
+  const sn=document.getElementById('streak-num');if(sn)sn.textContent=si.streak;
+  const tr=document.getElementById('today-rew');if(tr)tr.textContent=todayRew.ic+' '+getRewText(todayRew);
+  const bb=document.getElementById('bonus-bar');
+  if(bb){
+    const nextMile=MILESTONES.find(m=>m.days>si.streak);
+    if(nextMile)bb.textContent=`🎯 再簽 ${nextMile.days-si.streak} 天達成「${nextMile.n}」→ ${nextMile.rew}`;
+    else bb.textContent='🏆 你已達成所有里程碑！繼續保持！';
+  }
+
+  // Build 7-day display grid
+  const grid=document.getElementById('signin-grid');
+  if(grid){
+    grid.innerHTML='';
+    // Show 7 days around today in cycle
+    const startDay=Math.max(1,cycleDay-3);
+    for(let d=startDay;d<=Math.min(30,startDay+6);d++){
+      const r=SIGNIN_REWARDS.find(x=>x.day===d)||SIGNIN_REWARDS[0];
+      const isClaimed=si.totalDays>=(d) && d<cycleDay;
+      const isToday=d===cycleDay;
+      const isMissed=d<cycleDay&&!isClaimed;
+      const box=document.createElement('div');
+      box.className='day-box'+(isClaimed?' claimed':isToday?' today':isMissed?' missed':'');
+      box.innerHTML=`<span class="day-ic">${r.ic}</span><span class="day-lbl">Day ${d}</span><span class="day-rew">${getRewText(r)}</span>`;
+      grid.appendChild(box);
+    }
+  }
+
+  // Signin button
+  const btn=document.getElementById('btn-signin');
+  const msg=document.getElementById('signin-msg');
+  if(btn&&msg){
+    if(si.claimedToday){
+      btn.disabled=true;
+      btn.textContent='✅ 今日已簽到';
+      msg.textContent=`明天再來！連續簽到 ${si.streak} 天 🔥`;
+      msg.style.color='var(--g2)';
+    } else {
+      btn.disabled=false;
+      btn.textContent='✅ 立即簽到';
+      msg.textContent=`今日獎勵：${todayRew.ic} ${getRewText(todayRew)}`;
+      msg.style.color='#555';
+    }
+  }
+
+  // History
+  const hist=document.getElementById('signin-history');
+  if(hist){
+    if(!si.history||!si.history.length){hist.textContent='尚無簽到紀錄';return;}
+    hist.innerHTML=si.history.slice(-10).reverse().map(h=>`<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed #eee"><span>${h.date}</span><span>${h.ic} ${h.reward} <span style="color:var(--g3);font-weight:700">+${h.val}</span></span></div>`).join('');
+  }
+
+  // Milestones
+  const ms=document.getElementById('signin-milestones');
+  if(ms){
+    ms.innerHTML='';
+    MILESTONES.forEach(m=>{
+      const done=si.streak>=m.days||si.totalDays>=m.days;
+      const el=document.createElement('div');
+      el.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;margin-bottom:5px;background:'+(done?'#e8f5e9':'#fff')+';border:2px solid '+(done?'var(--g3)':'var(--border)');
+      el.innerHTML=`<span style="font-size:1.5rem">${m.ic}</span><div style="flex:1"><div style="font-size:.78rem;font-weight:700">${m.n} <span style="font-size:.65rem;color:#888">（${m.days}天）</span></div><div style="font-size:.65rem;color:var(--g2)">${m.rew}</div></div><span style="font-size:.85rem">${done?'✅':'🔒 還需'+(m.days-Math.min(si.streak,si.totalDays))+'天'}</span>`;
+      ms.appendChild(el);
+    });
+  }
+}
+
+function getRewText(r){
+  if(r.n==='金幣')return `💰${r.val}`;
+  if(r.n==='大禮包'||r.n==='超級禮包'||r.n==='月度大禮'||r.n==='傳奇禮包'||r.n==='月滿禮')return `💰${r.val}`;
+  return `×${r.val}`;
+}
+
+function doSignin(){
+  if(!S.signIn)S.signIn={streak:0,lastDate:'',totalDays:0,history:[],claimedToday:false};
+  const si=S.signIn;
+  const today=todayStr();
+  if(si.claimedToday&&si.lastDate===today){notify('今日已簽到！明天再來 😊','warn');return;}
+
+  // Check streak continuity
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const yStr=`${yesterday.getFullYear()}-${yesterday.getMonth()+1}-${yesterday.getDate()}`;
+  if(si.lastDate===yStr)si.streak++;
+  else if(si.lastDate===today){}
+  else si.streak=1;
+  if(si.lastDate!==today)si.totalDays++;
+
+  si.lastDate=today;
+  si.claimedToday=true;
+
+  // Give reward
+  const cycleDay=((si.totalDays-1)%30)+1;
+  const rew=SIGNIN_REWARDS.find(r=>r.day===cycleDay)||SIGNIN_REWARDS[0];
+  let rewText='';
+  if(rew.n==='金幣'||rew.n.includes('禮包')||rew.n==='月滿禮'){
+    S.coins+=rew.val;rewText=`+${rew.val}💰`;sfxC();
+  } else if(rew.n==='肥料'){
+    S.inv.fert+=rew.val;rewText=`+${rew.val}🌿肥料`;
+  } else if(rew.n==='除蟲劑'){
+    S.inv.pest+=rew.val;rewText=`+${rew.val}🐞除蟲劑`;
+  } else if(rew.n==='人工降雨'){
+    S.inv.rain+=rew.val;rewText=`+${rew.val}🌧️人工降雨`;
+  }
+
+  // Milestone bonus check
+  let mileBonusMsg='';
+  MILESTONES.forEach(m=>{
+    if((si.streak===m.days||si.totalDays===m.days)&&!si['ms_'+m.days]){
+      si['ms_'+m.days]=true;
+      // Give milestone bonus
+      const bonusCoins=m.days*100;
+      S.coins+=bonusCoins;
+      mileBonusMsg=`🎉 里程碑「${m.n}」解鎖！+${bonusCoins}💰！`;
+      sfxL();
+    }
+  });
+
+  // Record history
+  si.history=si.history||[];
+  si.history.push({date:today,ic:rew.ic,reward:getRewText(rew),val:rew.val});
+  if(si.history.length>30)si.history.shift();
+
+  addXP(20+si.streak*2);
+  notify(`📅 簽到成功！${rewText} 連續${si.streak}天🔥`);
+  if(mileBonusMsg)setTimeout(()=>notify(mileBonusMsg),800);
+  updHdr();updInv();save();buildSignin();
+}
+
+// ═══ TIMERS ═══
+function startTimers(){setInterval(()=>{if(CU){renderFG();updCD();}},4000);setInterval(()=>{if(CU)aiTick();},18000);setInterval(()=>{if(CU)aiChat();},28000);setInterval(()=>{if(CU)save();},30000);}
+</script>
+</body>
+</html>
